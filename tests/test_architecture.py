@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def imported_modules(path: Path) -> set[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    names = set()
+    names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             names.update(alias.name for alias in node.names)
