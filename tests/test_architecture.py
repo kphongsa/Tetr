@@ -37,3 +37,14 @@ def test_no_global_random_module_in_game_code():
         if "np.random.seed(" in text or "np.random.randint(" in text:
             offenders.append(str(path.relative_to(ROOT)))
     assert not offenders, offenders
+
+
+def test_core_never_imports_games():
+    # core/ (training loop, evaluation, ...) must work for any game, so it may
+    # only talk to games through the env interface, never import them.
+    offenders = []
+    for path in (ROOT / "core").rglob("*.py"):
+        for mod in imported_modules(path):
+            if mod.split(".")[0] in ("games", "agents"):
+                offenders.append(f"{path.relative_to(ROOT)} imports {mod}")
+    assert not offenders, offenders
