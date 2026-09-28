@@ -59,3 +59,23 @@ def render(
             out.append("+" + "-" * WIDTH + "+")  # top of the visible area
     out.append("+" + "-" * WIDTH + "+")  # floor
     return "\n".join(out)
+
+
+def render_game(engine, show_hidden: bool = False) -> str:
+    """Render a TetrisEngine's full state (board, active piece, score, lines).
+
+    Takes the engine by duck typing rather than importing TetrisEngine, so
+    this module stays a leaf with no dependency on game logic.
+    """
+    active = [] if engine.game_over else engine.active_cells()
+    text = render(
+        engine.board,
+        active_cells=active,
+        active_piece=engine.piece,
+        score=engine.score,
+        lines=engine.lines,
+        show_hidden=show_hidden,
+    )
+    if engine.game_over:
+        text += "\nGAME OVER"
+    return text

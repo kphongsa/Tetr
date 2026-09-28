@@ -26,6 +26,16 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   pieces appear. Game over happens when a new piece can't appear there.
 - **Hard drop**: move the piece straight down as far as it can go, then lock it.
   **Soft drop**: move it down by one row.
+- **Line clear**: a completely filled row disappears and everything above it
+  moves down. Clearing 1/2/3/4 rows with one piece is a single/double/triple/
+  **Tetris** (worth 100/300/500/800 here). Big clears are worth more per line,
+  so a good player (or agent) saves up for Tetrises.
+- **Stack**: the pile of locked blocks. **Well**: a one-column-wide gap kept
+  open on purpose so a vertical I can drop in for a Tetris.
+- **Active piece**: the piece currently falling and under control. It isn't
+  written into the board array until it locks.
+- **Spawn position**: where a new piece appears. Ours puts the bounding box's
+  top-left at row 0, centred. That leaves room to rotate any piece right away.
 
 ## Reproducibility
 

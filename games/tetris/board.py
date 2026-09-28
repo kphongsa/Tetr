@@ -60,6 +60,21 @@ class Board:
         for dr, dc in shape:
             self.grid[row + dr, col + dc] = piece
 
+    def clear_full_lines(self) -> int:
+        """Remove every completely filled row; rows above fall down. Returns count.
+
+        Full rows don't have to be next to each other (e.g. rows 19 and 21 can
+        clear while row 20 stays). We keep the non-full rows in their original
+        order, stack them at the bottom, and pad the top with empty rows.
+        """
+        full = self.grid.all(axis=1)  # one bool per row: every cell non-zero?
+        n = int(full.sum())
+        if n:
+            kept = self.grid[~full]
+            self.grid[:n] = EMPTY
+            self.grid[n:] = kept
+        return n
+
     @property
     def visible(self) -> np.ndarray:
         """View of the 20 visible rows (no copy)."""
