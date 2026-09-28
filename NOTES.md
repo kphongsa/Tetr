@@ -102,3 +102,18 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **Copy vs peek**: two ways to look ahead without changing the real game.
   Copy = simulate on a copy of the board; peek = change the real board and
   undo. We copy: the board is tiny and there's nothing to undo wrongly.
+- **Heuristic (rule-based) agent**: a player whose decisions come from a
+  hand-written formula, not learning. Ours scores each afterstate as a
+  weighted sum of features and plays the best one.
+- **Weights**: the multipliers in that sum. Their signs say "good" (+) or
+  "bad" (−); their sizes say how much each feature matters relative to others.
+- **Genetic algorithm**: a search method inspired by evolution. Keep the best
+  weight sets, mix and mutate them, repeat. Used to find the published
+  weights we start from.
+- **Tie-breaking**: the rule for choosing between equally scored moves. Ours
+  (lowest action id) is deterministic, so the same game replays identically.
+- **tottime vs cumtime (cProfile)**: tottime = time spent inside a function
+  itself; cumtime = including everything it calls. Look at cumtime to find
+  which *part* of the program is slow, tottime to find the exact hot line.
+- **NumPy call overhead**: every NumPy call costs ~1–5 µs even on a tiny
+  array. On a 22×10 board that overhead, not the arithmetic, is most of the cost.
