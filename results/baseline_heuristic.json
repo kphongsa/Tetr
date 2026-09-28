@@ -1,7 +1,7 @@
 {
   "description": "Rule-based baseline on the evaluation seeds. This is the score to beat.",
-  "agent": "heuristic",
-  "weights_source": "Lee 2013",
+  "agent": "heuristic (tuned)",
+  "weights_source": "CEM (tuned_weights.json)",
   "feature_names": [
     "aggregate_height",
     "lines_cleared",
@@ -9,10 +9,10 @@
     "bumpiness"
   ],
   "weights": [
-    -0.510066,
-    0.760666,
-    -0.35663,
-    -0.184483
+    -0.21302665245346544,
+    -0.5380936845238836,
+    -0.7945797831738655,
+    -0.18362407301700523
   ],
   "seeds": [
     10000,
@@ -118,545 +118,590 @@
   ],
   "max_pieces": 10000,
   "git": {
-    "commit": "499168cbf67cbab27eb92fe765bff0eb60313f9d",
-    "dirty": false
+    "commit": "9edaae2da5255c11d810e5ac72b50d29c06bd7ef",
+    "dirty": true
   },
   "summary": {
     "return": {
-      "mean": 48869.0,
-      "median": 40650.0,
-      "std": 37648.83980948151,
-      "min": 1900.0,
-      "max": 212900.0
+      "mean": 67036.0,
+      "median": 49100.0,
+      "std": 57637.233660195736,
+      "min": 1700.0,
+      "max": 276000.0
     },
     "steps": {
-      "mean": 1156.71,
-      "median": 949.0,
-      "std": 857.4433193511976,
-      "min": 80.0,
-      "max": 4817.0
+      "mean": 1537.11,
+      "median": 1133.5,
+      "std": 1290.051850857166,
+      "min": 78.0,
+      "max": 6219.0
     },
     "lines": {
-      "mean": 446.37,
-      "median": 365.5,
-      "std": 342.7670828711532,
-      "min": 18.0,
-      "max": 1910.0
+      "mean": 599.37,
+      "median": 438.5,
+      "std": 515.8553024831673,
+      "min": 14.0,
+      "max": 2472.0
     },
     "score": {
-      "mean": 48869.0,
-      "median": 40650.0,
-      "std": 37648.83980948151,
-      "min": 1900.0,
-      "max": 212900.0
+      "mean": 67036.0,
+      "median": 49100.0,
+      "std": 57637.233660195736,
+      "min": 1700.0,
+      "max": 276000.0
     },
     "pieces": {
-      "mean": 1156.71,
-      "median": 949.0,
-      "std": 857.4433193511976,
-      "min": 80.0,
-      "max": 4817.0
+      "mean": 1537.11,
+      "median": 1133.5,
+      "std": 1290.051850857166,
+      "min": 78.0,
+      "max": 6219.0
     },
     "games": 100,
     "capped": 0,
     "max_steps": 10000,
-    "seconds": 417.0071657000808,
-    "games_per_second": 0.23980403270077577,
-    "steps_per_second": 277.38372266531434
+    "seconds": 553.4071053999942,
+    "games_per_second": 0.18069880025794308,
+    "steps_per_second": 277.7539328644869
   },
-  "random_summary": {
-    "return": {
-      "mean": 2.0,
-      "median": 0.0,
-      "std": 14.0,
-      "min": 0.0,
-      "max": 100.0
+  "other_summaries": {
+    "random": {
+      "return": {
+        "mean": 2.0,
+        "median": 0.0,
+        "std": 14.0,
+        "min": 0.0,
+        "max": 100.0
+      },
+      "steps": {
+        "mean": 21.4,
+        "median": 22.0,
+        "std": 3.926830783214372,
+        "min": 12.0,
+        "max": 30.0
+      },
+      "lines": {
+        "mean": 0.02,
+        "median": 0.0,
+        "std": 0.13999999999999999,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "score": {
+        "mean": 2.0,
+        "median": 0.0,
+        "std": 14.0,
+        "min": 0.0,
+        "max": 100.0
+      },
+      "pieces": {
+        "mean": 21.4,
+        "median": 22.0,
+        "std": 3.926830783214372,
+        "min": 12.0,
+        "max": 30.0
+      },
+      "games": 100,
+      "capped": 0,
+      "max_steps": 10000,
+      "seconds": 0.7598038000287488,
+      "games_per_second": 131.61292427889447,
+      "steps_per_second": 2816.516579568342
     },
-    "steps": {
-      "mean": 21.4,
-      "median": 22.0,
-      "std": 3.926830783214372,
-      "min": 12.0,
-      "max": 30.0
-    },
-    "lines": {
-      "mean": 0.02,
-      "median": 0.0,
-      "std": 0.13999999999999999,
-      "min": 0.0,
-      "max": 1.0
-    },
-    "score": {
-      "mean": 2.0,
-      "median": 0.0,
-      "std": 14.0,
-      "min": 0.0,
-      "max": 100.0
-    },
-    "pieces": {
-      "mean": 21.4,
-      "median": 22.0,
-      "std": 3.926830783214372,
-      "min": 12.0,
-      "max": 30.0
-    },
-    "games": 100,
-    "capped": 0,
-    "max_steps": 10000,
-    "seconds": 0.7650083999615163,
-    "games_per_second": 130.71751892532225,
-    "steps_per_second": 2797.3549050018964
+    "heuristic (Lee)": {
+      "return": {
+        "mean": 48869.0,
+        "median": 40650.0,
+        "std": 37648.83980948151,
+        "min": 1900.0,
+        "max": 212900.0
+      },
+      "steps": {
+        "mean": 1156.71,
+        "median": 949.0,
+        "std": 857.4433193511976,
+        "min": 80.0,
+        "max": 4817.0
+      },
+      "lines": {
+        "mean": 446.37,
+        "median": 365.5,
+        "std": 342.7670828711532,
+        "min": 18.0,
+        "max": 1910.0
+      },
+      "score": {
+        "mean": 48869.0,
+        "median": 40650.0,
+        "std": 37648.83980948151,
+        "min": 1900.0,
+        "max": 212900.0
+      },
+      "pieces": {
+        "mean": 1156.71,
+        "median": 949.0,
+        "std": 857.4433193511976,
+        "min": 80.0,
+        "max": 4817.0
+      },
+      "games": 100,
+      "capped": 0,
+      "max_steps": 10000,
+      "seconds": 361.651553099975,
+      "games_per_second": 0.2765092508046163,
+      "steps_per_second": 319.84101549820775
+    }
   },
   "games": [
     {
       "seed": 10000,
-      "return": 59800.0,
-      "steps": 1397,
+      "return": 43100.0,
+      "steps": 977,
       "terminated": true,
       "truncated": false,
-      "lines": 542,
-      "score": 59800,
-      "pieces": 1397
+      "lines": 378,
+      "score": 43100,
+      "pieces": 977
     },
     {
       "seed": 10001,
-      "return": 38400.0,
-      "steps": 921,
+      "return": 122900.0,
+      "steps": 2808,
       "terminated": true,
       "truncated": false,
-      "lines": 354,
-      "score": 38400,
-      "pieces": 921
+      "lines": 1108,
+      "score": 122900,
+      "pieces": 2808
     },
     {
       "seed": 10002,
-      "return": 23600.0,
-      "steps": 570,
+      "return": 52200.0,
+      "steps": 1186,
       "terminated": true,
       "truncated": false,
-      "lines": 213,
-      "score": 23600,
-      "pieces": 570
+      "lines": 459,
+      "score": 52200,
+      "pieces": 1186
     },
     {
       "seed": 10003,
-      "return": 48100.0,
-      "steps": 1140,
+      "return": 127500.0,
+      "steps": 2867,
       "terminated": true,
       "truncated": false,
-      "lines": 440,
-      "score": 48100,
-      "pieces": 1140
+      "lines": 1134,
+      "score": 127500,
+      "pieces": 2867
     },
     {
       "seed": 10004,
-      "return": 6500.0,
-      "steps": 192,
+      "return": 8000.0,
+      "steps": 210,
       "terminated": true,
       "truncated": false,
-      "lines": 59,
-      "score": 6500,
-      "pieces": 192
+      "lines": 67,
+      "score": 8000,
+      "pieces": 210
     },
     {
       "seed": 10005,
-      "return": 40100.0,
-      "steps": 957,
-      "terminated": true,
-      "truncated": false,
-      "lines": 365,
-      "score": 40100,
-      "pieces": 957
-    },
-    {
-      "seed": 10006,
-      "return": 25500.0,
-      "steps": 613,
-      "terminated": true,
-      "truncated": false,
-      "lines": 228,
-      "score": 25500,
-      "pieces": 613
-    },
-    {
-      "seed": 10007,
-      "return": 26100.0,
-      "steps": 637,
-      "terminated": true,
-      "truncated": false,
-      "lines": 239,
-      "score": 26100,
-      "pieces": 637
-    },
-    {
-      "seed": 10008,
-      "return": 29000.0,
-      "steps": 714,
-      "terminated": true,
-      "truncated": false,
-      "lines": 268,
-      "score": 29000,
-      "pieces": 714
-    },
-    {
-      "seed": 10009,
-      "return": 125900.0,
-      "steps": 2924,
-      "terminated": true,
-      "truncated": false,
-      "lines": 1153,
-      "score": 125900,
-      "pieces": 2924
-    },
-    {
-      "seed": 10010,
-      "return": 30800.0,
-      "steps": 719,
-      "terminated": true,
-      "truncated": false,
-      "lines": 273,
-      "score": 30800,
-      "pieces": 719
-    },
-    {
-      "seed": 10011,
-      "return": 17900.0,
-      "steps": 442,
-      "terminated": true,
-      "truncated": false,
-      "lines": 160,
-      "score": 17900,
-      "pieces": 442
-    },
-    {
-      "seed": 10012,
-      "return": 27600.0,
+      "return": 29600.0,
       "steps": 687,
       "terminated": true,
       "truncated": false,
-      "lines": 259,
-      "score": 27600,
+      "lines": 260,
+      "score": 29600,
       "pieces": 687
     },
     {
-      "seed": 10013,
-      "return": 12600.0,
-      "steps": 340,
+      "seed": 10006,
+      "return": 94800.0,
+      "steps": 2157,
       "terminated": true,
       "truncated": false,
-      "lines": 120,
-      "score": 12600,
-      "pieces": 340
+      "lines": 848,
+      "score": 94800,
+      "pieces": 2157
     },
     {
-      "seed": 10014,
-      "return": 41200.0,
-      "steps": 941,
+      "seed": 10007,
+      "return": 130100.0,
+      "steps": 2959,
       "terminated": true,
       "truncated": false,
-      "lines": 366,
-      "score": 41200,
-      "pieces": 941
+      "lines": 1167,
+      "score": 130100,
+      "pieces": 2959
     },
     {
-      "seed": 10015,
-      "return": 74200.0,
-      "steps": 1719,
+      "seed": 10008,
+      "return": 26300.0,
+      "steps": 603,
       "terminated": true,
       "truncated": false,
-      "lines": 670,
-      "score": 74200,
-      "pieces": 1719
+      "lines": 225,
+      "score": 26300,
+      "pieces": 603
     },
     {
-      "seed": 10016,
-      "return": 33600.0,
-      "steps": 815,
+      "seed": 10009,
+      "return": 4800.0,
+      "steps": 145,
       "terminated": true,
       "truncated": false,
-      "lines": 310,
-      "score": 33600,
-      "pieces": 815
+      "lines": 42,
+      "score": 4800,
+      "pieces": 145
     },
     {
-      "seed": 10017,
-      "return": 50000.0,
-      "steps": 1209,
+      "seed": 10010,
+      "return": 65800.0,
+      "steps": 1542,
       "terminated": true,
       "truncated": false,
-      "lines": 466,
-      "score": 50000,
-      "pieces": 1209
+      "lines": 600,
+      "score": 65800,
+      "pieces": 1542
     },
     {
-      "seed": 10018,
-      "return": 65900.0,
-      "steps": 1531,
+      "seed": 10011,
+      "return": 165800.0,
+      "steps": 3718,
       "terminated": true,
       "truncated": false,
-      "lines": 599,
-      "score": 65900,
-      "pieces": 1531
+      "lines": 1471,
+      "score": 165800,
+      "pieces": 3718
     },
     {
-      "seed": 10019,
-      "return": 26700.0,
-      "steps": 662,
+      "seed": 10012,
+      "return": 27100.0,
+      "steps": 660,
       "terminated": true,
       "truncated": false,
       "lines": 247,
-      "score": 26700,
-      "pieces": 662
+      "score": 27100,
+      "pieces": 660
+    },
+    {
+      "seed": 10013,
+      "return": 94200.0,
+      "steps": 2159,
+      "terminated": true,
+      "truncated": false,
+      "lines": 847,
+      "score": 94200,
+      "pieces": 2159
+    },
+    {
+      "seed": 10014,
+      "return": 34600.0,
+      "steps": 844,
+      "terminated": true,
+      "truncated": false,
+      "lines": 322,
+      "score": 34600,
+      "pieces": 844
+    },
+    {
+      "seed": 10015,
+      "return": 33400.0,
+      "steps": 781,
+      "terminated": true,
+      "truncated": false,
+      "lines": 295,
+      "score": 33400,
+      "pieces": 781
+    },
+    {
+      "seed": 10016,
+      "return": 56800.0,
+      "steps": 1341,
+      "terminated": true,
+      "truncated": false,
+      "lines": 520,
+      "score": 56800,
+      "pieces": 1341
+    },
+    {
+      "seed": 10017,
+      "return": 3900.0,
+      "steps": 130,
+      "terminated": true,
+      "truncated": false,
+      "lines": 35,
+      "score": 3900,
+      "pieces": 130
+    },
+    {
+      "seed": 10018,
+      "return": 24400.0,
+      "steps": 592,
+      "terminated": true,
+      "truncated": false,
+      "lines": 224,
+      "score": 24400,
+      "pieces": 592
+    },
+    {
+      "seed": 10019,
+      "return": 169200.0,
+      "steps": 3844,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1524,
+      "score": 169200,
+      "pieces": 3844
     },
     {
       "seed": 10020,
-      "return": 17500.0,
-      "steps": 436,
+      "return": 19100.0,
+      "steps": 493,
       "terminated": true,
       "truncated": false,
-      "lines": 157,
-      "score": 17500,
-      "pieces": 436
+      "lines": 182,
+      "score": 19100,
+      "pieces": 493
     },
     {
       "seed": 10021,
-      "return": 51700.0,
-      "steps": 1235,
+      "return": 22700.0,
+      "steps": 528,
       "terminated": true,
       "truncated": false,
-      "lines": 477,
-      "score": 51700,
-      "pieces": 1235
+      "lines": 200,
+      "score": 22700,
+      "pieces": 528
     },
     {
       "seed": 10022,
-      "return": 90800.0,
-      "steps": 2115,
+      "return": 258100.0,
+      "steps": 5816,
       "terminated": true,
       "truncated": false,
-      "lines": 830,
-      "score": 90800,
-      "pieces": 2115
+      "lines": 2310,
+      "score": 258100,
+      "pieces": 5816
     },
     {
       "seed": 10023,
-      "return": 117000.0,
-      "steps": 2762,
+      "return": 186700.0,
+      "steps": 4237,
       "terminated": true,
       "truncated": false,
-      "lines": 1088,
-      "score": 117000,
-      "pieces": 2762
+      "lines": 1677,
+      "score": 186700,
+      "pieces": 4237
     },
     {
       "seed": 10024,
-      "return": 46000.0,
-      "steps": 1089,
+      "return": 16300.0,
+      "steps": 409,
       "terminated": true,
       "truncated": false,
-      "lines": 419,
-      "score": 46000,
-      "pieces": 1089
+      "lines": 147,
+      "score": 16300,
+      "pieces": 409
     },
     {
       "seed": 10025,
-      "return": 107900.0,
-      "steps": 2518,
+      "return": 66400.0,
+      "steps": 1525,
       "terminated": true,
       "truncated": false,
-      "lines": 991,
-      "score": 107900,
-      "pieces": 2518
+      "lines": 592,
+      "score": 66400,
+      "pieces": 1525
     },
     {
       "seed": 10026,
-      "return": 48700.0,
-      "steps": 1163,
-      "terminated": true,
-      "truncated": false,
-      "lines": 448,
-      "score": 48700,
-      "pieces": 1163
-    },
-    {
-      "seed": 10027,
-      "return": 124000.0,
-      "steps": 2842,
-      "terminated": true,
-      "truncated": false,
-      "lines": 1122,
-      "score": 124000,
-      "pieces": 2842
-    },
-    {
-      "seed": 10028,
-      "return": 28800.0,
-      "steps": 699,
-      "terminated": true,
-      "truncated": false,
-      "lines": 266,
-      "score": 28800,
-      "pieces": 699
-    },
-    {
-      "seed": 10029,
-      "return": 63400.0,
-      "steps": 1489,
-      "terminated": true,
-      "truncated": false,
-      "lines": 579,
-      "score": 63400,
-      "pieces": 1489
-    },
-    {
-      "seed": 10030,
-      "return": 96300.0,
-      "steps": 2252,
-      "terminated": true,
-      "truncated": false,
-      "lines": 883,
-      "score": 96300,
-      "pieces": 2252
-    },
-    {
-      "seed": 10031,
-      "return": 96300.0,
-      "steps": 2225,
-      "terminated": true,
-      "truncated": false,
-      "lines": 875,
-      "score": 96300,
-      "pieces": 2225
-    },
-    {
-      "seed": 10032,
-      "return": 43800.0,
-      "steps": 1041,
-      "terminated": true,
-      "truncated": false,
-      "lines": 399,
-      "score": 43800,
-      "pieces": 1041
-    },
-    {
-      "seed": 10033,
-      "return": 112500.0,
-      "steps": 2616,
-      "terminated": true,
-      "truncated": false,
-      "lines": 1031,
-      "score": 112500,
-      "pieces": 2616
-    },
-    {
-      "seed": 10034,
-      "return": 65600.0,
-      "steps": 1530,
-      "terminated": true,
-      "truncated": false,
-      "lines": 595,
-      "score": 65600,
-      "pieces": 1530
-    },
-    {
-      "seed": 10035,
-      "return": 29700.0,
-      "steps": 729,
-      "terminated": true,
-      "truncated": false,
-      "lines": 274,
-      "score": 29700,
-      "pieces": 729
-    },
-    {
-      "seed": 10036,
-      "return": 56200.0,
-      "steps": 1340,
-      "terminated": true,
-      "truncated": false,
-      "lines": 519,
-      "score": 56200,
-      "pieces": 1340
-    },
-    {
-      "seed": 10037,
-      "return": 15300.0,
-      "steps": 401,
-      "terminated": true,
-      "truncated": false,
-      "lines": 143,
-      "score": 15300,
-      "pieces": 401
-    },
-    {
-      "seed": 10038,
-      "return": 16400.0,
-      "steps": 404,
-      "terminated": true,
-      "truncated": false,
-      "lines": 144,
-      "score": 16400,
-      "pieces": 404
-    },
-    {
-      "seed": 10039,
-      "return": 25100.0,
-      "steps": 624,
-      "terminated": true,
-      "truncated": false,
-      "lines": 232,
-      "score": 25100,
-      "pieces": 624
-    },
-    {
-      "seed": 10040,
-      "return": 29400.0,
-      "steps": 705,
-      "terminated": true,
-      "truncated": false,
-      "lines": 265,
-      "score": 29400,
-      "pieces": 705
-    },
-    {
-      "seed": 10041,
-      "return": 109600.0,
-      "steps": 2565,
-      "terminated": true,
-      "truncated": false,
-      "lines": 1009,
-      "score": 109600,
-      "pieces": 2565
-    },
-    {
-      "seed": 10042,
-      "return": 101500.0,
-      "steps": 2377,
-      "terminated": true,
-      "truncated": false,
-      "lines": 933,
-      "score": 101500,
-      "pieces": 2377
-    },
-    {
-      "seed": 10043,
-      "return": 22900.0,
-      "steps": 557,
-      "terminated": true,
-      "truncated": false,
-      "lines": 206,
-      "score": 22900,
-      "pieces": 557
-    },
-    {
-      "seed": 10044,
-      "return": 19300.0,
-      "steps": 479,
+      "return": 19500.0,
+      "steps": 468,
       "terminated": true,
       "truncated": false,
       "lines": 175,
-      "score": 19300,
-      "pieces": 479
+      "score": 19500,
+      "pieces": 468
+    },
+    {
+      "seed": 10027,
+      "return": 120700.0,
+      "steps": 2723,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1075,
+      "score": 120700,
+      "pieces": 2723
+    },
+    {
+      "seed": 10028,
+      "return": 87300.0,
+      "steps": 1955,
+      "terminated": true,
+      "truncated": false,
+      "lines": 768,
+      "score": 87300,
+      "pieces": 1955
+    },
+    {
+      "seed": 10029,
+      "return": 217600.0,
+      "steps": 4831,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1917,
+      "score": 217600,
+      "pieces": 4831
+    },
+    {
+      "seed": 10030,
+      "return": 101000.0,
+      "steps": 2300,
+      "terminated": true,
+      "truncated": false,
+      "lines": 903,
+      "score": 101000,
+      "pieces": 2300
+    },
+    {
+      "seed": 10031,
+      "return": 185100.0,
+      "steps": 4190,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1663,
+      "score": 185100,
+      "pieces": 4190
+    },
+    {
+      "seed": 10032,
+      "return": 5900.0,
+      "steps": 171,
+      "terminated": true,
+      "truncated": false,
+      "lines": 55,
+      "score": 5900,
+      "pieces": 171
+    },
+    {
+      "seed": 10033,
+      "return": 13800.0,
+      "steps": 356,
+      "terminated": true,
+      "truncated": false,
+      "lines": 129,
+      "score": 13800,
+      "pieces": 356
+    },
+    {
+      "seed": 10034,
+      "return": 85100.0,
+      "steps": 1916,
+      "terminated": true,
+      "truncated": false,
+      "lines": 752,
+      "score": 85100,
+      "pieces": 1916
+    },
+    {
+      "seed": 10035,
+      "return": 128000.0,
+      "steps": 2855,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1126,
+      "score": 128000,
+      "pieces": 2855
+    },
+    {
+      "seed": 10036,
+      "return": 41400.0,
+      "steps": 977,
+      "terminated": true,
+      "truncated": false,
+      "lines": 374,
+      "score": 41400,
+      "pieces": 977
+    },
+    {
+      "seed": 10037,
+      "return": 68400.0,
+      "steps": 1599,
+      "terminated": true,
+      "truncated": false,
+      "lines": 622,
+      "score": 68400,
+      "pieces": 1599
+    },
+    {
+      "seed": 10038,
+      "return": 7600.0,
+      "steps": 217,
+      "terminated": true,
+      "truncated": false,
+      "lines": 69,
+      "score": 7600,
+      "pieces": 217
+    },
+    {
+      "seed": 10039,
+      "return": 36100.0,
+      "steps": 843,
+      "terminated": true,
+      "truncated": false,
+      "lines": 321,
+      "score": 36100,
+      "pieces": 843
+    },
+    {
+      "seed": 10040,
+      "return": 20900.0,
+      "steps": 527,
+      "terminated": true,
+      "truncated": false,
+      "lines": 194,
+      "score": 20900,
+      "pieces": 527
+    },
+    {
+      "seed": 10041,
+      "return": 116500.0,
+      "steps": 2706,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1065,
+      "score": 116500,
+      "pieces": 2706
+    },
+    {
+      "seed": 10042,
+      "return": 119800.0,
+      "steps": 2748,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1082,
+      "score": 119800,
+      "pieces": 2748
+    },
+    {
+      "seed": 10043,
+      "return": 29900.0,
+      "steps": 695,
+      "terminated": true,
+      "truncated": false,
+      "lines": 262,
+      "score": 29900,
+      "pieces": 695
+    },
+    {
+      "seed": 10044,
+      "return": 134600.0,
+      "steps": 3068,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1211,
+      "score": 134600,
+      "pieces": 3068
     },
     {
       "seed": 10045,
@@ -670,223 +715,223 @@
     },
     {
       "seed": 10046,
-      "return": 11300.0,
-      "steps": 287,
+      "return": 3600.0,
+      "steps": 124,
       "terminated": true,
       "truncated": false,
-      "lines": 100,
-      "score": 11300,
-      "pieces": 287
+      "lines": 33,
+      "score": 3600,
+      "pieces": 124
     },
     {
       "seed": 10047,
-      "return": 8100.0,
-      "steps": 234,
+      "return": 1700.0,
+      "steps": 78,
       "terminated": true,
       "truncated": false,
-      "lines": 77,
-      "score": 8100,
-      "pieces": 234
+      "lines": 14,
+      "score": 1700,
+      "pieces": 78
     },
     {
       "seed": 10048,
-      "return": 24100.0,
-      "steps": 611,
+      "return": 65900.0,
+      "steps": 1544,
       "terminated": true,
       "truncated": false,
-      "lines": 228,
-      "score": 24100,
-      "pieces": 611
+      "lines": 600,
+      "score": 65900,
+      "pieces": 1544
     },
     {
       "seed": 10049,
-      "return": 24300.0,
-      "steps": 600,
+      "return": 39700.0,
+      "steps": 928,
       "terminated": true,
       "truncated": false,
-      "lines": 223,
-      "score": 24300,
-      "pieces": 600
+      "lines": 359,
+      "score": 39700,
+      "pieces": 928
     },
     {
       "seed": 10050,
-      "return": 41600.0,
-      "steps": 978,
+      "return": 39000.0,
+      "steps": 881,
       "terminated": true,
       "truncated": false,
-      "lines": 374,
-      "score": 41600,
-      "pieces": 978
+      "lines": 336,
+      "score": 39000,
+      "pieces": 881
     },
     {
       "seed": 10051,
-      "return": 37400.0,
-      "steps": 911,
+      "return": 137600.0,
+      "steps": 3122,
       "terminated": true,
       "truncated": false,
-      "lines": 347,
-      "score": 37400,
-      "pieces": 911
+      "lines": 1233,
+      "score": 137600,
+      "pieces": 3122
     },
     {
       "seed": 10052,
-      "return": 18400.0,
-      "steps": 457,
+      "return": 143600.0,
+      "steps": 3242,
       "terminated": true,
       "truncated": false,
-      "lines": 166,
-      "score": 18400,
-      "pieces": 457
+      "lines": 1278,
+      "score": 143600,
+      "pieces": 3242
     },
     {
       "seed": 10053,
-      "return": 51800.0,
-      "steps": 1264,
+      "return": 48000.0,
+      "steps": 1088,
       "terminated": true,
       "truncated": false,
-      "lines": 488,
-      "score": 51800,
-      "pieces": 1264
+      "lines": 423,
+      "score": 48000,
+      "pieces": 1088
     },
     {
       "seed": 10054,
-      "return": 21300.0,
-      "steps": 526,
+      "return": 58900.0,
+      "steps": 1352,
       "terminated": true,
       "truncated": false,
-      "lines": 195,
-      "score": 21300,
-      "pieces": 526
+      "lines": 525,
+      "score": 58900,
+      "pieces": 1352
     },
     {
       "seed": 10055,
-      "return": 42000.0,
-      "steps": 991,
+      "return": 87100.0,
+      "steps": 1992,
       "terminated": true,
       "truncated": false,
-      "lines": 380,
-      "score": 42000,
-      "pieces": 991
+      "lines": 782,
+      "score": 87100,
+      "pieces": 1992
     },
     {
       "seed": 10056,
-      "return": 61400.0,
-      "steps": 1429,
+      "return": 27600.0,
+      "steps": 642,
       "terminated": true,
       "truncated": false,
-      "lines": 555,
-      "score": 61400,
-      "pieces": 1429
+      "lines": 242,
+      "score": 27600,
+      "pieces": 642
     },
     {
       "seed": 10057,
-      "return": 13000.0,
-      "steps": 312,
+      "return": 33100.0,
+      "steps": 795,
       "terminated": true,
       "truncated": false,
-      "lines": 107,
-      "score": 13000,
-      "pieces": 312
+      "lines": 300,
+      "score": 33100,
+      "pieces": 795
     },
     {
       "seed": 10058,
-      "return": 26400.0,
-      "steps": 647,
+      "return": 22200.0,
+      "steps": 543,
       "terminated": true,
       "truncated": false,
-      "lines": 243,
-      "score": 26400,
-      "pieces": 647
+      "lines": 200,
+      "score": 22200,
+      "pieces": 543
     },
     {
       "seed": 10059,
-      "return": 91100.0,
-      "steps": 2172,
+      "return": 125400.0,
+      "steps": 2829,
       "terminated": true,
       "truncated": false,
-      "lines": 851,
-      "score": 91100,
-      "pieces": 2172
+      "lines": 1120,
+      "score": 125400,
+      "pieces": 2829
     },
     {
       "seed": 10060,
-      "return": 6800.0,
-      "steps": 208,
+      "return": 56700.0,
+      "steps": 1298,
       "terminated": true,
       "truncated": false,
-      "lines": 66,
-      "score": 6800,
-      "pieces": 208
+      "lines": 501,
+      "score": 56700,
+      "pieces": 1298
     },
     {
       "seed": 10061,
-      "return": 19100.0,
-      "steps": 469,
+      "return": 106100.0,
+      "steps": 2407,
       "terminated": true,
       "truncated": false,
-      "lines": 173,
-      "score": 19100,
-      "pieces": 469
+      "lines": 947,
+      "score": 106100,
+      "pieces": 2407
     },
     {
       "seed": 10062,
-      "return": 56300.0,
-      "steps": 1304,
+      "return": 11200.0,
+      "steps": 291,
       "terminated": true,
       "truncated": false,
-      "lines": 505,
-      "score": 56300,
-      "pieces": 1304
+      "lines": 100,
+      "score": 11200,
+      "pieces": 291
     },
     {
       "seed": 10063,
-      "return": 18000.0,
-      "steps": 453,
+      "return": 132200.0,
+      "steps": 3001,
       "terminated": true,
       "truncated": false,
-      "lines": 166,
-      "score": 18000,
-      "pieces": 453
+      "lines": 1183,
+      "score": 132200,
+      "pieces": 3001
     },
     {
       "seed": 10064,
-      "return": 44400.0,
-      "steps": 1069,
+      "return": 49000.0,
+      "steps": 1169,
       "terminated": true,
       "truncated": false,
-      "lines": 410,
-      "score": 44400,
-      "pieces": 1069
+      "lines": 450,
+      "score": 49000,
+      "pieces": 1169
     },
     {
       "seed": 10065,
-      "return": 112200.0,
-      "steps": 2562,
+      "return": 132100.0,
+      "steps": 3021,
       "terminated": true,
       "truncated": false,
-      "lines": 1009,
-      "score": 112200,
-      "pieces": 2562
+      "lines": 1195,
+      "score": 132100,
+      "pieces": 3021
     },
     {
       "seed": 10066,
-      "return": 57700.0,
-      "steps": 1344,
+      "return": 23300.0,
+      "steps": 545,
       "terminated": true,
       "truncated": false,
-      "lines": 523,
-      "score": 57700,
-      "pieces": 1344
+      "lines": 207,
+      "score": 23300,
+      "pieces": 545
     },
     {
       "seed": 10067,
-      "return": 26500.0,
-      "steps": 655,
+      "return": 19300.0,
+      "steps": 468,
       "terminated": true,
       "truncated": false,
-      "lines": 246,
-      "score": 26500,
-      "pieces": 655
+      "lines": 171,
+      "score": 19300,
+      "pieces": 468
     },
     {
       "seed": 10068,
@@ -900,313 +945,313 @@
     },
     {
       "seed": 10069,
-      "return": 45300.0,
-      "steps": 1071,
+      "return": 46800.0,
+      "steps": 1072,
       "terminated": true,
       "truncated": false,
-      "lines": 411,
-      "score": 45300,
-      "pieces": 1071
+      "lines": 413,
+      "score": 46800,
+      "pieces": 1072
     },
     {
       "seed": 10070,
-      "return": 24100.0,
-      "steps": 595,
-      "terminated": true,
-      "truncated": false,
-      "lines": 221,
-      "score": 24100,
-      "pieces": 595
-    },
-    {
-      "seed": 10071,
-      "return": 10200.0,
-      "steps": 282,
-      "terminated": true,
-      "truncated": false,
-      "lines": 96,
-      "score": 10200,
-      "pieces": 282
-    },
-    {
-      "seed": 10072,
-      "return": 43900.0,
-      "steps": 1042,
-      "terminated": true,
-      "truncated": false,
-      "lines": 403,
-      "score": 43900,
-      "pieces": 1042
-    },
-    {
-      "seed": 10073,
-      "return": 46900.0,
-      "steps": 1101,
-      "terminated": true,
-      "truncated": false,
-      "lines": 425,
-      "score": 46900,
-      "pieces": 1101
-    },
-    {
-      "seed": 10074,
-      "return": 57400.0,
-      "steps": 1336,
-      "terminated": true,
-      "truncated": false,
-      "lines": 517,
-      "score": 57400,
-      "pieces": 1336
-    },
-    {
-      "seed": 10075,
-      "return": 17600.0,
-      "steps": 422,
-      "terminated": true,
-      "truncated": false,
-      "lines": 156,
-      "score": 17600,
-      "pieces": 422
-    },
-    {
-      "seed": 10076,
-      "return": 13600.0,
-      "steps": 370,
-      "terminated": true,
-      "truncated": false,
-      "lines": 130,
-      "score": 13600,
-      "pieces": 370
-    },
-    {
-      "seed": 10077,
-      "return": 38100.0,
-      "steps": 914,
-      "terminated": true,
-      "truncated": false,
-      "lines": 348,
-      "score": 38100,
-      "pieces": 914
-    },
-    {
-      "seed": 10078,
-      "return": 51400.0,
-      "steps": 1237,
-      "terminated": true,
-      "truncated": false,
-      "lines": 478,
-      "score": 51400,
-      "pieces": 1237
-    },
-    {
-      "seed": 10079,
-      "return": 138200.0,
-      "steps": 3194,
-      "terminated": true,
-      "truncated": false,
-      "lines": 1260,
-      "score": 138200,
-      "pieces": 3194
-    },
-    {
-      "seed": 10080,
-      "return": 48600.0,
+      "return": 50100.0,
       "steps": 1160,
       "terminated": true,
       "truncated": false,
-      "lines": 446,
-      "score": 48600,
+      "lines": 447,
+      "score": 50100,
       "pieces": 1160
     },
     {
-      "seed": 10081,
-      "return": 71400.0,
-      "steps": 1699,
+      "seed": 10071,
+      "return": 50000.0,
+      "steps": 1147,
       "terminated": true,
       "truncated": false,
-      "lines": 662,
-      "score": 71400,
-      "pieces": 1699
+      "lines": 441,
+      "score": 50000,
+      "pieces": 1147
+    },
+    {
+      "seed": 10072,
+      "return": 123400.0,
+      "steps": 2801,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1103,
+      "score": 123400,
+      "pieces": 2801
+    },
+    {
+      "seed": 10073,
+      "return": 125700.0,
+      "steps": 2838,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1119,
+      "score": 125700,
+      "pieces": 2838
+    },
+    {
+      "seed": 10074,
+      "return": 276000.0,
+      "steps": 6219,
+      "terminated": true,
+      "truncated": false,
+      "lines": 2472,
+      "score": 276000,
+      "pieces": 6219
+    },
+    {
+      "seed": 10075,
+      "return": 89000.0,
+      "steps": 2040,
+      "terminated": true,
+      "truncated": false,
+      "lines": 803,
+      "score": 89000,
+      "pieces": 2040
+    },
+    {
+      "seed": 10076,
+      "return": 61000.0,
+      "steps": 1407,
+      "terminated": true,
+      "truncated": false,
+      "lines": 547,
+      "score": 61000,
+      "pieces": 1407
+    },
+    {
+      "seed": 10077,
+      "return": 20300.0,
+      "steps": 484,
+      "terminated": true,
+      "truncated": false,
+      "lines": 179,
+      "score": 20300,
+      "pieces": 484
+    },
+    {
+      "seed": 10078,
+      "return": 47300.0,
+      "steps": 1075,
+      "terminated": true,
+      "truncated": false,
+      "lines": 418,
+      "score": 47300,
+      "pieces": 1075
+    },
+    {
+      "seed": 10079,
+      "return": 158300.0,
+      "steps": 3584,
+      "terminated": true,
+      "truncated": false,
+      "lines": 1418,
+      "score": 158300,
+      "pieces": 3584
+    },
+    {
+      "seed": 10080,
+      "return": 15200.0,
+      "steps": 390,
+      "terminated": true,
+      "truncated": false,
+      "lines": 139,
+      "score": 15200,
+      "pieces": 390
+    },
+    {
+      "seed": 10081,
+      "return": 49200.0,
+      "steps": 1120,
+      "terminated": true,
+      "truncated": false,
+      "lines": 436,
+      "score": 49200,
+      "pieces": 1120
     },
     {
       "seed": 10082,
-      "return": 145400.0,
-      "steps": 3362,
+      "return": 66500.0,
+      "steps": 1497,
       "terminated": true,
       "truncated": false,
-      "lines": 1327,
-      "score": 145400,
-      "pieces": 3362
+      "lines": 586,
+      "score": 66500,
+      "pieces": 1497
     },
     {
       "seed": 10083,
-      "return": 46900.0,
-      "steps": 1094,
+      "return": 6100.0,
+      "steps": 167,
       "terminated": true,
       "truncated": false,
-      "lines": 422,
-      "score": 46900,
-      "pieces": 1094
+      "lines": 52,
+      "score": 6100,
+      "pieces": 167
     },
     {
       "seed": 10084,
-      "return": 28900.0,
-      "steps": 697,
+      "return": 58600.0,
+      "steps": 1307,
       "terminated": true,
       "truncated": false,
-      "lines": 262,
-      "score": 28900,
-      "pieces": 697
+      "lines": 511,
+      "score": 58600,
+      "pieces": 1307
     },
     {
       "seed": 10085,
-      "return": 97700.0,
-      "steps": 2252,
+      "return": 59200.0,
+      "steps": 1338,
       "terminated": true,
       "truncated": false,
-      "lines": 885,
-      "score": 97700,
-      "pieces": 2252
+      "lines": 520,
+      "score": 59200,
+      "pieces": 1338
     },
     {
       "seed": 10086,
-      "return": 48500.0,
-      "steps": 1163,
+      "return": 23900.0,
+      "steps": 570,
       "terminated": true,
       "truncated": false,
-      "lines": 449,
-      "score": 48500,
-      "pieces": 1163
+      "lines": 213,
+      "score": 23900,
+      "pieces": 570
     },
     {
       "seed": 10087,
-      "return": 17700.0,
-      "steps": 451,
+      "return": 130800.0,
+      "steps": 3002,
       "terminated": true,
       "truncated": false,
-      "lines": 163,
-      "score": 17700,
-      "pieces": 451
+      "lines": 1183,
+      "score": 130800,
+      "pieces": 3002
     },
     {
       "seed": 10088,
-      "return": 8300.0,
-      "steps": 230,
+      "return": 99100.0,
+      "steps": 2263,
       "terminated": true,
       "truncated": false,
-      "lines": 76,
-      "score": 8300,
-      "pieces": 230
+      "lines": 889,
+      "score": 99100,
+      "pieces": 2263
     },
     {
       "seed": 10089,
-      "return": 122600.0,
-      "steps": 2855,
+      "return": 30500.0,
+      "steps": 699,
       "terminated": true,
       "truncated": false,
-      "lines": 1125,
-      "score": 122600,
-      "pieces": 2855
+      "lines": 266,
+      "score": 30500,
+      "pieces": 699
     },
     {
       "seed": 10090,
-      "return": 48900.0,
-      "steps": 1163,
+      "return": 19800.0,
+      "steps": 457,
       "terminated": true,
       "truncated": false,
-      "lines": 449,
-      "score": 48900,
-      "pieces": 1163
+      "lines": 168,
+      "score": 19800,
+      "pieces": 457
     },
     {
       "seed": 10091,
-      "return": 212900.0,
-      "steps": 4817,
+      "return": 13800.0,
+      "steps": 347,
       "terminated": true,
       "truncated": false,
-      "lines": 1910,
-      "score": 212900,
-      "pieces": 4817
+      "lines": 122,
+      "score": 13800,
+      "pieces": 347
     },
     {
       "seed": 10092,
-      "return": 17100.0,
-      "steps": 437,
+      "return": 59700.0,
+      "steps": 1387,
       "terminated": true,
       "truncated": false,
-      "lines": 161,
-      "score": 17100,
-      "pieces": 437
+      "lines": 537,
+      "score": 59700,
+      "pieces": 1387
     },
     {
       "seed": 10093,
-      "return": 89800.0,
-      "steps": 2097,
+      "return": 14900.0,
+      "steps": 370,
       "terminated": true,
       "truncated": false,
-      "lines": 822,
-      "score": 89800,
-      "pieces": 2097
+      "lines": 133,
+      "score": 14900,
+      "pieces": 370
     },
     {
       "seed": 10094,
-      "return": 83700.0,
-      "steps": 1965,
+      "return": 29400.0,
+      "steps": 692,
       "terminated": true,
       "truncated": false,
-      "lines": 771,
-      "score": 83700,
-      "pieces": 1965
+      "lines": 260,
+      "score": 29400,
+      "pieces": 692
     },
     {
       "seed": 10095,
-      "return": 19000.0,
-      "steps": 483,
+      "return": 61500.0,
+      "steps": 1430,
       "terminated": true,
       "truncated": false,
-      "lines": 177,
-      "score": 19000,
-      "pieces": 483
+      "lines": 555,
+      "score": 61500,
+      "pieces": 1430
     },
     {
       "seed": 10096,
-      "return": 29000.0,
-      "steps": 714,
+      "return": 2800.0,
+      "steps": 96,
       "terminated": true,
       "truncated": false,
-      "lines": 269,
-      "score": 29000,
-      "pieces": 714
+      "lines": 25,
+      "score": 2800,
+      "pieces": 96
     },
     {
       "seed": 10097,
-      "return": 33300.0,
-      "steps": 743,
+      "return": 42800.0,
+      "steps": 960,
       "terminated": true,
       "truncated": false,
-      "lines": 281,
-      "score": 33300,
-      "pieces": 743
+      "lines": 367,
+      "score": 42800,
+      "pieces": 960
     },
     {
       "seed": 10098,
-      "return": 58500.0,
-      "steps": 1357,
+      "return": 43800.0,
+      "steps": 1008,
       "terminated": true,
       "truncated": false,
-      "lines": 526,
-      "score": 58500,
-      "pieces": 1357
+      "lines": 391,
+      "score": 43800,
+      "pieces": 1008
     },
     {
       "seed": 10099,
-      "return": 11700.0,
-      "steps": 306,
+      "return": 33900.0,
+      "steps": 805,
       "terminated": true,
       "truncated": false,
-      "lines": 110,
-      "score": 11700,
-      "pieces": 306
+      "lines": 305,
+      "score": 33900,
+      "pieces": 805
     }
   ]
 }

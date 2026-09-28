@@ -158,8 +158,10 @@ def git_commit() -> dict:
     """Current commit hash and whether there are uncommitted changes.
 
     Saved alongside results so a number can always be traced back to the
-    exact code that produced it. "dirty" = the working tree had uncommitted
-    edits, so the hash alone doesn't fully describe the code.
+    exact code that produced it. "dirty" = tracked files had uncommitted
+    edits, so the hash alone doesn't fully describe the code. Untracked
+    files are ignored: they're typically fresh outputs (results/*.json),
+    and code only matters once it's tracked anyway.
     """
     root = Path(__file__).resolve().parents[1]
 
@@ -167,6 +169,6 @@ def git_commit() -> dict:
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True).stdout.strip()
 
     try:
-        return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain"))}
+        return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
     except OSError:  # git not installed
         return {"commit": None, "dirty": None}

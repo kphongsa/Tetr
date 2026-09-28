@@ -102,3 +102,10 @@ def test_summarize():
     s = summarize([1, 2, 3, 10])
     assert s == {"mean": 4.0, "median": 2.5, "std": pytest.approx(np.std([1, 2, 3, 10])),
                  "min": 1.0, "max": 10.0}
+
+
+def test_git_commit_reports_a_hash():
+    from core.evaluate import git_commit
+    info = git_commit()
+    assert set(info) == {"commit", "dirty"}
+    assert info["commit"] is None or len(info["commit"]) == 40
