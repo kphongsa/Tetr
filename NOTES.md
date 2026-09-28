@@ -85,3 +85,20 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   the time actually goes. Optimize the top item, not a guess.
 - **Pieces per second**: our speed metric. RL needs millions of game steps,
   so this determines how long training takes.
+
+## Step 2: rule-based baseline
+
+- **Afterstate**: the board right after a placement locks and lines clear,
+  before the next (random) piece appears. Picking a move = picking the
+  afterstate you like best; step 3's network will learn to rate these.
+- **Feature**: a single number summarizing something about a board (e.g. how
+  many holes). Hand-picked features turn a 220-cell board into a few numbers
+  a simple formula can reason about.
+- **Aggregate height**: sum of all column heights. High = close to game over.
+- **Hole**: an empty cell with a block above it in the same column. Can't be
+  filled until the blocks above are cleared.
+- **Bumpiness**: sum of height differences between neighbouring columns. A
+  jagged surface fits pieces badly.
+- **Copy vs peek**: two ways to look ahead without changing the real game.
+  Copy = simulate on a copy of the board; peek = change the real board and
+  undo. We copy: the board is tiny and there's nothing to undo wrongly.
