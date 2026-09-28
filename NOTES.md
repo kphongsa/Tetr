@@ -117,3 +117,50 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   which *part* of the program is slow, tottime to find the exact hot line.
 - **NumPy call overhead**: every NumPy call costs ~1–5 µs even on a tiny
   array. On a 22×10 board that overhead, not the arithmetic, is most of the cost.
+
+## Step 2c–2d: evaluation and tuning
+
+- **Evaluation harness**: code that plays an agent on a fixed list of games
+  and reports summary statistics. Same agent + same seeds = same numbers, so
+  two agents can be compared fairly on identical games.
+- **Truncation cap / step limit**: ending a game early after N steps (pieces)
+  and marking it *truncated*, not lost. Keeps evaluations finite, but if most
+  games hit the cap, strong agents all look the same.
+- **Mean / median / standard deviation (std)**: the average; the middle value
+  (less swayed by a few huge games); and how spread out the results are.
+  Tetris results are very spread out (std ≈ mean).
+- **Standard error**: roughly how far the measured mean could be from the
+  "true" mean because we only played n games: std / √n. Differences smaller
+  than ~2 standard errors may just be luck.
+- **Provenance**: recording where a result came from (git commit, seeds,
+  settings) so it can be reproduced and trusted later.
+- **Return**: the total reward collected over one episode. It's what RL
+  agents try to maximize.
+- **Cross-entropy method (CEM)**: a search method. Keep a bell-curve "cloud"
+  of candidate parameter vectors; each round sample some, score them, keep
+  the best few (the *elite*), and move/shrink the cloud to fit the elite.
+- **Elite**: the top fraction of candidates in a CEM round; the next round's
+  cloud is fitted to them.
+- **Fitness**: the single number a search method tries to maximize for a
+  candidate (here: mean score over a few games).
+- **Population**: how many candidates are sampled per round.
+- **Search vs. RL**: search (like CEM) only sees each candidate's final total
+  score and keeps what worked. RL learns from *which moves* in a game led to
+  reward, which scales to huge models (neural networks) where search can't.
+- **Gradient**: the direction in which changing the parameters improves a
+  score fastest. Deep learning follows gradients; CEM doesn't use them.
+- **Overfitting**: doing well only on the examples you trained/tuned on
+  (e.g. particular piece sequences) and worse on new ones. Prevented by
+  measuring on separate, never-seen examples.
+- **Train / test split (tuning seeds vs. evaluation seeds)**: tune on one set
+  of games, report results on a disjoint set. Only the second number is an
+  honest estimate of how good the agent is.
+- **Winner's curse**: the candidate that scored best on a few noisy games is
+  probably partly lucky, so its score overstates its true quality. That's
+  why we keep CEM's *average of the elite* rather than the single best one.
+- **Normalization (unit length)**: rescaling a weight vector to length 1.
+  For "pick the highest weighted sum", only the direction of the weights
+  matters, so this removes a meaningless degree of freedom from the search.
+- **CPU throttling**: a laptop slowing its processor after a few seconds of
+  heavy load (heat/power limits). Short benchmarks then overstate how fast
+  long runs will be.

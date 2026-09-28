@@ -4,6 +4,7 @@ Run from the repo root:
     python -m scripts.evaluate                       # 100 games, seeds 10000..10099, cap 10000
     python -m scripts.evaluate --games 20            # quicker, noisier
     python -m scripts.evaluate --no-save             # don't touch results/
+    python -m scripts.evaluate --tuned               # also evaluate results/tuned_weights.json
 
 Prints one table (random vs heuristic) and writes results/baseline_heuristic.json
 with the seeds, cap, weights and git commit. For a traceable result, commit
@@ -67,42 +68,60 @@ def main():
     parser.add_argument("--seed", type=int, default=EVAL_FIRST_SEED, help="seed of the first game")
     parser.add_argument("--max-pieces", type=int, default=EVAL_MAX_PIECES)
     parser.add_argument("--no-save", action="store_true", help="don't write results/baseline_heuristic.json")
+    parser.add_argument("--tuned", nargs="?", const=str(RESULTS_DIR / "tuned_weights.json"), default=None,
+                        help="also evaluate tuned weights from this JSON (default path if given without a value)")
     args = parser.parse_args()
 
     seeds = list(range(args.seed, args.seed + args.games))
     env = TetrisEnv()  # no env-level cap: core's StepLimit applies --max-pieces
-    heuristic = HeuristicAgent(LEE_WEIGHTS)
+
+    # Heuristic candidates: name -> (weights, where they came from).
+    heuristics = {"heuristic (Lee)": (LEE_WEIGHTS, "Lee 2013")}
+    if args.tuned:
+        tuned = json.loads(Path(args.tuned).read_text())
+        assert tuned["feature_names"] == list(FEATURE_NAMES), "tuned weights use different features"
+        heuristics["heuristic (tuned)"] = (tuned["weights"], f"CEM ({Path(args.tuned).name})")
+
     agents = {
         # The random agent gets a per-game rng derived from the game seed
         # (the [seed, 1] pair keeps it distinct from the game's own rng stream).
         "random": lambda seed: RandomAgent(np.random.default_rng([seed, 1])),
-        # The heuristic is deterministic, so one instance can play every game.
-        "heuristic (Lee)": lambda seed: heuristic,
     }
+    for name, (weights, _) in heuristics.items():
+        # Heuristics are deterministic, so one instance can play every game.
+        # (agent=... binds THIS agent now; a plain closure would see the last one.)
+        agent = HeuristicAgent(weights)
+        agents[name] = lambda seed, agent=agent: agent
 
     print(f"evaluating on {len(seeds)} games, seeds {seeds[0]}..{seeds[-1]}, cap {args.max_pieces} pieces\n")
     results = {name: evaluate(env, make, seeds, args.max_pieces, METRICS) for name, make in agents.items()}
     print_table(results)
     warn_if_capped(results)
 
+    # The baseline is the best heuristic by mean score (the env's reward, so
+    # it's what a learning agent will be maximizing too).
+    best = max(heuristics, key=lambda n: results[n]["summary"]["score"]["mean"])
+    print(f"\nbest heuristic by mean score: {best}")
+
     if not args.no_save:
         RESULTS_DIR.mkdir(exist_ok=True)
         path = RESULTS_DIR / "baseline_heuristic.json"
+        weights, source = heuristics[best]
         payload = {
             "description": "Rule-based baseline on the evaluation seeds. This is the score to beat.",
-            "agent": "heuristic",
-            "weights_source": "Lee 2013",
+            "agent": best,
+            "weights_source": source,
             "feature_names": list(FEATURE_NAMES),
-            "weights": list(heuristic.weights),
+            "weights": [float(w) for w in weights],
             "seeds": seeds,
             "max_pieces": args.max_pieces,
             "git": git_commit(),
-            "summary": results["heuristic (Lee)"]["summary"],
-            "random_summary": results["random"]["summary"],
-            "games": results["heuristic (Lee)"]["games"],
+            "summary": results[best]["summary"],
+            "other_summaries": {n: r["summary"] for n, r in results.items() if n != best},
+            "games": results[best]["games"],
         }
         path.write_text(json.dumps(payload, indent=2))
-        print(f"\nsaved {path.relative_to(RESULTS_DIR.parent)}")
+        print(f"saved {path.relative_to(RESULTS_DIR.parent)}")
 
 
 if __name__ == "__main__":
