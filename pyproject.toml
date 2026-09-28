@@ -1,0 +1,12 @@
+[project]
+name = "tetris-rl"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+# Make `import games...` work from tests without installing the package.
+pythonpath = ["."]
+testpaths = ["tests"]
+# importlib mode lets tests in different folders share file names
+# (e.g. tests/games/tetris/test_env.py and a future tests/games/sts/test_env.py).
+addopts = "--import-mode=importlib"
