@@ -67,3 +67,21 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **Placement action**: instead of pressing buttons, the agent picks where the
   piece ends up (rotation + column). Far fewer decisions per piece, so
   learning is much easier.
+- **Fixed action space**: numbering every *possible* action once (for us 40 =
+  4 rotations × 10 columns), even though only some are legal at any moment.
+  Neural networks need a fixed number of outputs, and the action mask marks
+  which of those outputs are currently allowed.
+- **Tuck / spin**: sliding a piece sideways under an overhang after it has
+  dropped, or rotating it into a tight slot. Our placements can't do these
+  (they only rotate, shift, then drop). Button-press actions in step 5 will.
+- **Random baseline**: an agent that picks legal moves at random. It's the
+  lowest bar: any strategy worth anything must beat it by a lot.
+
+## Engineering terms
+
+- **Benchmark**: a repeatable speed/quality measurement (same seeds every
+  run), so changes can be compared fairly.
+- **Profiling**: running code under a tool (`cProfile`) that measures where
+  the time actually goes. Optimize the top item, not a guess.
+- **Pieces per second**: our speed metric. RL needs millions of game steps,
+  so this determines how long training takes.
