@@ -185,7 +185,10 @@ class AfterstateTDLearner:
     training. 40 x 4 floats per transition is small (~70 MB for 100k).
     """
 
-    stat_names: tuple[str, ...] = ("loss", "value_mean", "target_mean")
+    # value_max: the largest prediction in the batch. Its per-episode average
+    # is what scripts/run_status.py compares against the theoretical ceiling
+    # (runaway values are a classic sign of TD learning going unstable).
+    stat_names: tuple[str, ...] = ("loss", "value_mean", "value_max", "target_mean")
 
     def __init__(self, agent: AfterstateValueAgent, cfg: TDConfig, n_features: int, max_candidates: int) -> None:
         self.agent = agent
@@ -294,7 +297,8 @@ class AfterstateTDLearner:
         if self.updates % cfg.target_update_every == 0:
             self.sync_target()
         # .item() pulls a plain Python number out of a 1-element tensor.
-        return {"loss": loss.item(), "value_mean": pred.mean().item(), "target_mean": target.mean().item()}
+        return {"loss": loss.item(), "value_mean": pred.mean().item(), "value_max": pred.max().item(),
+                "target_mean": target.mean().item()}
 
     def sync_target(self) -> None:
         self.target_net.load_state_dict(self.net.state_dict())

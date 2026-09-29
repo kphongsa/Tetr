@@ -176,3 +176,20 @@ def test_periodic_evaluation_best_checkpoint_and_replays(tmp_path):
     r = load_replay(replays[0])
     assert r["seed"] == 2 and r["metadata"]["step"] == int(evals[0]["step"])
     assert replay_episode(CountdownEnv(), r)["terminated"]
+
+
+def test_ctrl_c_during_evaluation_still_saves_and_resumes(tmp_path):
+    # Once the agent is good, one evaluation takes minutes, so that's where a
+    # Ctrl+C is most likely to land. The eval env "crashes" on its 2nd step.
+    spec = EvalSpec(env=CountdownEnv(interrupt_at=2), seeds=[4], max_steps=None, info_keys=("left",))
+    c = cfg(total_steps=40, eval_every_episodes=4, checkpoint_every_episodes=1000)
+    res = train(CountdownEnv(), FakeLearner(), c, tmp_path, eval_spec=spec, tensorboard=False)
+    assert res.interrupted
+    ck = load_checkpoint(tmp_path / "checkpoints" / "latest.pt")
+    # The 4 episodes before the evaluation are finished and saved, nothing lost.
+    assert ck["progress"]["episode"] == 4 == len(res.rows)
+    assert ck["progress"]["step"] == res.rows[-1]["step"]
+
+    resumed = train(CountdownEnv(), FakeLearner(), cfg(total_steps=40, checkpoint_every_episodes=1000),
+                    tmp_path, tensorboard=False, resume=True)
+    assert resumed.rows[0]["episode"] == 4 and not resumed.interrupted

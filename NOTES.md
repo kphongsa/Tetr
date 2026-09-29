@@ -269,3 +269,27 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   actions from the seed reproduces the game exactly. We save the same two
   eval seeds at every evaluation, so you can watch how the agent plays the
   *same* piece sequence as training progresses.
+
+## Step 3d: the real training run
+- **Learning curve**: a plot of performance (lines, score) against training
+  time. It's the main way to see whether the agent is still improving,
+  has leveled off, or is getting worse.
+- **Moving average**: the average of the last N values, recomputed at each
+  point. Single training games are very noisy; a 50-game average shows the trend.
+- **Value ceiling**: the largest value a correct network could ever predict.
+  Here it's (best reward per piece) / (1 − gamma) = (0.1 + 0.01 × 0.4 × 200) /
+  0.01 = 90. A prediction above it is certainly wrong.
+- **Overestimation**: TD targets use a *max* over the network's own guesses,
+  so random errors upward get picked more often than errors downward. The
+  guesses can then feed on themselves and climb without limit, which is why
+  the status script watches predicted values against the ceiling.
+- **Divergence**: training blowing up: the loss or the values run off to huge
+  numbers (or nan = "not a number"). Once that happens, nothing after it is
+  meaningful. The run has to be restarted with safer settings.
+- **Plateau**: performance stops improving for a long stretch. Near the end of
+  a run that's normal; early, it can mean the network is too small, the
+  inputs don't carry enough information, or learning has stalled.
+- **Catastrophic forgetting**: a network getting *worse* at something it
+  already did well, because newer training data pushed its weights elsewhere.
+  It shows up as evaluation scores that rise and then fall. We keep best.pt
+  for this reason.

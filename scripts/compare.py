@@ -18,8 +18,8 @@ we can compare them game by game (learned score - tuned score on seed s).
 That removes most of the luck of the draw, so it detects smaller real
 differences than comparing two averages would.
 
-Writes results/comparison_step3.json (all numbers + per-game results) and
-results/comparison_step3.md (the table).
+Writes results/step3_comparison.json (all numbers + per-game results) and
+results/step3_comparison.md (the table).
 """
 
 from __future__ import annotations
@@ -119,6 +119,7 @@ def main() -> None:
         "description": "Step 3 learned agent vs step 2 baselines on the evaluation seeds.",
         "seeds": seeds,
         "max_pieces": cap,
+        "run": ck["config"]["name"],
         "checkpoint": {"path": str(args.checkpoint), "progress": progress, "config": ck["config"]},
         "git": git_commit(),
         "baseline_git": baseline["git"],
@@ -127,12 +128,12 @@ def main() -> None:
         "learned_games": learned["games"],
     }
     RESULTS.mkdir(exist_ok=True)
-    (RESULTS / "comparison_step3.json").write_text(json.dumps(payload, indent=2))
-    (RESULTS / "comparison_step3.md").write_text(
+    (RESULTS / "step3_comparison.json").write_text(json.dumps(payload, indent=2))
+    (RESULTS / "step3_comparison.md").write_text(
         f"# Step 3: learned agent vs baselines\n\n"
         f"{len(seeds)} games, seeds {seeds[0]}..{seeds[-1]}, cap {cap:,} pieces, greedy play.\n"
         f"Checkpoint: `{args.checkpoint}` (training step {progress['step']:,}).\n\n{md}\n\n{verdict}\n")
-    print("\nsaved results/comparison_step3.json and results/comparison_step3.md")
+    print("\nsaved results/step3_comparison.json and results/step3_comparison.md")
 
 
 if __name__ == "__main__":
