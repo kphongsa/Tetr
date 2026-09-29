@@ -39,6 +39,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from games.tetris.board import HEIGHT, Board
+from games.tetris.engine import LINE_CLEAR_SCORES
 from games.tetris.placements import Placement
 
 # Fixed order of the feature vector. Weight vectors (step 2b) use this order.
@@ -96,3 +97,45 @@ def board_features(grid: np.ndarray, lines_cleared: int) -> np.ndarray:
     holes = aggregate_height - int(np.count_nonzero(grid))
     bumpiness = int(np.abs(np.diff(heights)).sum())
     return np.array([aggregate_height, lines_cleared, holes, bumpiness], dtype=np.float64)
+
+
+# ----------------------------------------------------------------------
+# Candidates for learned agents (step 3)
+# ----------------------------------------------------------------------
+# Rough "typical large value" of each feature, used to shrink the network's
+# inputs to about 0..1. Neural networks train badly when inputs are in the
+# hundreds (aggregate height can reach ~200): the first layer's outputs get
+# huge, gradients get huge, and learning becomes unstable. These are fixed,
+# hand-picked constants, NOT learned, and only their rough size matters.
+FEATURE_SCALE: np.ndarray = np.array([100.0, 4.0, 20.0, 20.0])
+
+
+@dataclass(frozen=True)
+class Candidates:
+    """Everything a value-based agent needs to choose among legal placements.
+
+    Row i of every array describes the same placement (actions[i]). Rows are
+    in the env's order (sorted by action id), so "first best" = lowest id.
+    """
+
+    actions: list[int]
+    features: np.ndarray  # float32 (n, len(FEATURE_NAMES)), divided by FEATURE_SCALE
+    rewards: np.ndarray  # float64 (n,), points this placement scores (what env.step would return)
+    grids: list[np.ndarray]  # the afterstate boards themselves (0/1, (22, 10))
+
+
+def candidates(obs: dict, info: dict) -> Candidates:
+    """Afterstate, scaled features and immediate reward of every legal placement.
+
+    The reward uses the engine's own LINE_CLEAR_SCORES table, so the reward the
+    agent *expects* from a move is by construction the reward env.step() will
+    *give* for it (a test checks this on real games).
+    """
+    states = afterstates(obs["board"], info["placements"])
+    feats = np.array([board_features(a.grid, a.lines_cleared) for a in states]) / FEATURE_SCALE
+    return Candidates(
+        actions=[a.placement.action for a in states],
+        features=feats.astype(np.float32),  # PyTorch's default number type is float32
+        rewards=np.array([LINE_CLEAR_SCORES[a.lines_cleared] for a in states], dtype=np.float64),
+        grids=[a.grid for a in states],
+    )

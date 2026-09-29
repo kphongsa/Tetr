@@ -113,3 +113,45 @@ def test_afterstate_matches_really_playing_the_placement(piece):
         lines = apply_placement(real, a.placement)
         assert lines == a.lines_cleared
         np.testing.assert_array_equal((real.board.grid != 0).astype(np.uint8), a.grid)
+
+
+# --- candidates() (step 3) -------------------------------------------------
+
+def test_candidates_match_the_move_actually_played():
+    # The learner trusts candidates() to describe what env.step() will do.
+    # Check on real games: for the action actually played, the predicted
+    # afterstate must equal the env's next board, and the predicted reward
+    # must equal the env's reward. (Also covers line clears: random play on
+    # a partly-filled board clears lines now and then; the heuristic does often.)
+    from agents.heuristic_agent import HeuristicAgent
+    from games.tetris.env import TetrisEnv
+    from games.tetris.features import FEATURE_NAMES, candidates
+
+    env, agent = TetrisEnv(max_pieces=300), HeuristicAgent()
+    obs, info = env.reset(seed=3)
+    rewards_seen = set()
+    done = False
+    while not done:
+        c = candidates(obs, info)
+        assert c.actions == info["legal_actions"]
+        assert c.features.shape == (len(c.actions), len(FEATURE_NAMES))
+        action = agent.act(obs, info)
+        i = c.actions.index(action)
+        obs, reward, terminated, truncated, info = env.step(action)
+        assert c.rewards[i] == reward
+        rewards_seen.add(reward)
+        if not terminated:  # after game over the spawn failed, board may differ
+            assert np.array_equal(c.grids[i], obs["board"])
+        done = terminated or truncated
+    assert rewards_seen - {0}, "test game never cleared a line; pick another seed"
+
+
+def test_candidate_features_are_scaled():
+    from games.tetris.features import FEATURE_SCALE, candidates
+
+    from games.tetris.env import TetrisEnv
+
+    obs, info = TetrisEnv().reset(seed=0)
+    c = candidates(obs, info)
+    raw = np.array([board_features(g, 0) for g in c.grids])
+    assert np.allclose(c.features, raw / FEATURE_SCALE)

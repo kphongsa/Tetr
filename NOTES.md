@@ -164,3 +164,32 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **CPU throttling**: a laptop slowing its processor after a few seconds of
   heavy load (heat/power limits). Short benchmarks then overstate how fast
   long runs will be.
+
+## Step 3: first learning agent
+
+- **Neural network**: a function built from layers of weighted sums with
+  simple bends (like ReLU) in between. Its weights are *learned* from data
+  rather than hand-set, and it can represent curved, interacting judgments.
+- **MLP (multi-layer perceptron)**: the simplest neural network: a stack of
+  fully-connected (Linear) layers. Ours: 4 features in → 64 → 64 → 1 number out.
+- **Linear layer**: many weighted sums of the inputs at once (one per output),
+  plus a constant (the *bias*). The heuristic agent was one Linear layer
+  with one output.
+- **ReLU**: max(0, x), applied between layers. Without it, stacked Linear
+  layers collapse into a single weighted sum and gain nothing.
+- **Parameters**: all the numbers inside the network (weights and biases)
+  that training adjusts. Our MLP has ~4,500.
+- **Value function V**: the network's estimate of "how much future reward
+  will I collect from this position if I keep playing well". The agent picks
+  the placement whose afterstate has the best value.
+- **Q(s, a)**: the value of taking action a in state s = immediate reward +
+  gamma × value of the afterstate. We compute it for every legal placement.
+- **Epsilon-greedy exploration**: with probability epsilon make a random
+  legal move, otherwise the best-rated one. Without exploring, an agent never
+  tries moves it currently rates badly, so it can't discover they're good.
+- **Input scaling / normalization**: dividing inputs by rough typical sizes
+  so they're around 0..1. Networks learn poorly from inputs in the hundreds.
+- **float32**: the 32-bit decimal-number type PyTorch uses by default: half
+  the memory of NumPy's float64 and plenty precise for neural networks.
+- **PyTorch**: the deep-learning library we use: tensors (NumPy-like arrays)
+  plus automatic gradient computation and optimizers.
