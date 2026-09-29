@@ -181,11 +181,32 @@ def report(run_dir: Path, window: int = 50, patience: int = 5, baseline_path: Pa
     step, elapsed = last["step"], last["elapsed_sec"]
     rate = step / elapsed if elapsed else 0.0  # includes evaluation time: the honest overall rate
     train_rate = float(np.mean(column(log[-window:], "steps_per_sec")))
+    # Time left uses the RECENT rate (last `window` episodes, evaluations
+    # included): early in a run games are short and evaluations dominate, so
+    # the whole-run average badly overestimates how long the rest will take.
+    # Games that took over 5 minutes mean the process was paused (laptop
+    # sleep/suspend); their time is left out so a pause doesn't distort it.
+    def paused(r: dict) -> bool:
+        return bool(r.get("steps_per_sec")) and r["steps"] / r["steps_per_sec"] > 300
+
+    first = log[-window - 1] if len(log) > window else log[0]
+    recent = [r for r in log if r["episode"] > first["episode"]]
+    pause_secs = sum(r["steps"] / r["steps_per_sec"] for r in recent if paused(r))
+    pause_steps = sum(r["steps"] for r in recent if paused(r))
+    span = elapsed - first["elapsed_sec"] - pause_secs
+    recent_rate = (step - first["step"] - pause_steps) / span if span > 0 else rate
     age = time.time() - (run_dir / "log.csv").stat().st_mtime
     out.append(f"progress   episode {int(last['episode']) + 1:,}, pieces {int(step):,} / {total:,} "
                f"({100 * step / total:.1f}%), training time {_fmt_time(elapsed)}")
-    out.append(f"speed      {rate:.0f} pieces/s overall (incl. evaluations), {train_rate:.0f} while playing "
-               f"(last {window} episodes); ~{_fmt_time((total - step) / rate) if rate else '?'} left at this rate")
+    out.append(f"speed      {rate:.0f} pieces/s whole run, {recent_rate:.0f} recently (incl. evaluations), "
+               f"{train_rate:.0f} while playing; ~{_fmt_time((total - step) / recent_rate) if recent_rate else '?'} "
+               "left at the recent rate")
+    stalls = [r for r in log if paused(r)]
+    if stalls:
+        r = stalls[-1]
+        out.append(f"           note: {len(stalls)} game(s) took over 5 minutes (latest: episode "
+                   f"{int(r['episode'])}, {_fmt_time(r['steps'] / r['steps_per_sec'])}); the laptop probably "
+                   "slept. Harmless, just slower.")
     out.append(f"           log.csv last written {_fmt_time(age)} ago"
                + ("  <- is training still running?" if age > 600 else ""))
 

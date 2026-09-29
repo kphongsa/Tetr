@@ -53,7 +53,7 @@ def test_eval_plateau_is_flagged_only_after_patience():
     assert health_warnings([], eval_rows([10, 200, 150, 190, 180, 250]), 90.0, patience=5) == []
 
 
-def test_report_and_plot_on_a_fake_run(tmp_path):
+def write_fake_run(tmp_path, slow_episode=None):
     (tmp_path / "config.json").write_text(json.dumps(
         {"name": "fake", "loop": {"total_steps": 1000, "max_episode_steps": 2000}, "learner": LEARNER}))
     cols = ["episode", "step", "seed", "steps", "return", "terminated", "lines", "score", "pieces", "epsilon",
@@ -66,7 +66,8 @@ def test_report_and_plot_on_a_fake_run(tmp_path):
                         "lines": i // 10, "score": 100, "pieces": 5, "epsilon": 0.5,
                         "loss": "" if i < 3 else 0.05, "value_mean": "" if i < 3 else 1.0,
                         "value_max": "" if i < 3 else 2.0, "target_mean": "" if i < 3 else 1.0,
-                        "steps_per_sec": 300, "elapsed_sec": 2.0 * (i + 1)})
+                        "steps_per_sec": 0.01 if i == slow_episode else 300,
+                        "elapsed_sec": 2.0 * (i + 1) + (500 if slow_episode is not None and i >= slow_episode else 0)})
     with open(tmp_path / "eval.csv", "w", newline="") as f:
         w = csv.DictWriter(f, ["step", "episode", "games", "capped", "lines_mean", "score_mean", "pieces_mean",
                                "ref_lines_mean", "ref_score_mean", "ref_pieces_mean"])
@@ -75,6 +76,10 @@ def test_report_and_plot_on_a_fake_run(tmp_path):
             w.writerow({"step": 200 * i, "episode": 40 * i, "games": 20, "capped": 0, "lines_mean": v,
                         "score_mean": 100 * v, "pieces_mean": 3 * v, "ref_lines_mean": 588.6,
                         "ref_score_mean": 65725, "ref_pieces_mean": 1510})
+
+
+def test_report_and_plot_on_a_fake_run(tmp_path):
+    write_fake_run(tmp_path)
     text = report(tmp_path)
     assert "pieces 600 / 1,000" in text and "HEALTH: OK" in text
     assert "heuristic (tuned), same 20 seeds" in text and "heuristic (Lee) (100 seeds)" in text
@@ -83,3 +88,11 @@ def test_report_and_plot_on_a_fake_run(tmp_path):
 
 def test_baseline_file_has_all_three_baselines():
     assert set(load_baselines(BASELINE)) == {"random", "heuristic (Lee)", "heuristic (tuned)"}
+
+
+def test_paused_game_is_noted_and_left_out_of_time_left(tmp_path):
+    write_fake_run(tmp_path, slow_episode=110)  # 5 steps at 0.01/s = 500 s: "the laptop slept"
+    text = report(tmp_path)
+    assert "episode 110" in text and "slept" in text
+    # Recent rate ignores the pause: 5 pieces per 2 s = 2.5/s, not dragged down by the 500 s.
+    assert "2 recently" in text or "3 recently" in text
