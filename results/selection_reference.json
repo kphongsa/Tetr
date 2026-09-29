@@ -1,0 +1,218 @@
+{
+ "description": "Tuned heuristic on the selection seeds (in-training evaluation). Cache for scripts/train.py.",
+ "key": {
+  "cap": 10000,
+  "weights": [
+   -0.21302665245346544,
+   -0.5380936845238836,
+   -0.7945797831738655,
+   -0.18362407301700523
+  ]
+ },
+ "git": {
+  "commit": "927aa334a5fb3befd5c980e9b4c892b5ad460a3e",
+  "dirty": true
+ },
+ "games": {
+  "10100": {
+   "seed": 10100,
+   "return": 135500.0,
+   "steps": 3007,
+   "terminated": true,
+   "truncated": false,
+   "lines": 1187,
+   "score": 135500,
+   "pieces": 3007
+  },
+  "10101": {
+   "seed": 10101,
+   "return": 3700.0,
+   "steps": 120,
+   "terminated": true,
+   "truncated": false,
+   "lines": 35,
+   "score": 3700,
+   "pieces": 120
+  },
+  "10102": {
+   "seed": 10102,
+   "return": 106600.0,
+   "steps": 2447,
+   "terminated": true,
+   "truncated": false,
+   "lines": 963,
+   "score": 106600,
+   "pieces": 2447
+  },
+  "10103": {
+   "seed": 10103,
+   "return": 33700.0,
+   "steps": 787,
+   "terminated": true,
+   "truncated": false,
+   "lines": 300,
+   "score": 33700,
+   "pieces": 787
+  },
+  "10104": {
+   "seed": 10104,
+   "return": 35500.0,
+   "steps": 811,
+   "terminated": true,
+   "truncated": false,
+   "lines": 311,
+   "score": 35500,
+   "pieces": 811
+  },
+  "10105": {
+   "seed": 10105,
+   "return": 30300.0,
+   "steps": 724,
+   "terminated": true,
+   "truncated": false,
+   "lines": 275,
+   "score": 30300,
+   "pieces": 724
+  },
+  "10106": {
+   "seed": 10106,
+   "return": 84200.0,
+   "steps": 1906,
+   "terminated": true,
+   "truncated": false,
+   "lines": 745,
+   "score": 84200,
+   "pieces": 1906
+  },
+  "10107": {
+   "seed": 10107,
+   "return": 71100.0,
+   "steps": 1618,
+   "terminated": true,
+   "truncated": false,
+   "lines": 632,
+   "score": 71100,
+   "pieces": 1618
+  },
+  "10108": {
+   "seed": 10108,
+   "return": 27400.0,
+   "steps": 640,
+   "terminated": true,
+   "truncated": false,
+   "lines": 242,
+   "score": 27400,
+   "pieces": 640
+  },
+  "10109": {
+   "seed": 10109,
+   "return": 15500.0,
+   "steps": 398,
+   "terminated": true,
+   "truncated": false,
+   "lines": 143,
+   "score": 15500,
+   "pieces": 398
+  },
+  "10110": {
+   "seed": 10110,
+   "return": 59200.0,
+   "steps": 1366,
+   "terminated": true,
+   "truncated": false,
+   "lines": 531,
+   "score": 59200,
+   "pieces": 1366
+  },
+  "10111": {
+   "seed": 10111,
+   "return": 49000.0,
+   "steps": 1122,
+   "terminated": true,
+   "truncated": false,
+   "lines": 432,
+   "score": 49000,
+   "pieces": 1122
+  },
+  "10112": {
+   "seed": 10112,
+   "return": 21900.0,
+   "steps": 515,
+   "terminated": true,
+   "truncated": false,
+   "lines": 195,
+   "score": 21900,
+   "pieces": 515
+  },
+  "10113": {
+   "seed": 10113,
+   "return": 17700.0,
+   "steps": 421,
+   "terminated": true,
+   "truncated": false,
+   "lines": 153,
+   "score": 17700,
+   "pieces": 421
+  },
+  "10114": {
+   "seed": 10114,
+   "return": 94900.0,
+   "steps": 2137,
+   "terminated": true,
+   "truncated": false,
+   "lines": 840,
+   "score": 94900,
+   "pieces": 2137
+  },
+  "10115": {
+   "seed": 10115,
+   "return": 51400.0,
+   "steps": 1169,
+   "terminated": true,
+   "truncated": false,
+   "lines": 452,
+   "score": 51400,
+   "pieces": 1169
+  },
+  "10116": {
+   "seed": 10116,
+   "return": 157100.0,
+   "steps": 3563,
+   "terminated": true,
+   "truncated": false,
+   "lines": 1407,
+   "score": 157100,
+   "pieces": 3563
+  },
+  "10117": {
+   "seed": 10117,
+   "return": 19200.0,
+   "steps": 482,
+   "terminated": true,
+   "truncated": false,
+   "lines": 179,
+   "score": 19200,
+   "pieces": 482
+  },
+  "10118": {
+   "seed": 10118,
+   "return": 9300.0,
+   "steps": 249,
+   "terminated": true,
+   "truncated": false,
+   "lines": 86,
+   "score": 9300,
+   "pieces": 249
+  },
+  "10119": {
+   "seed": 10119,
+   "return": 151100.0,
+   "steps": 3404,
+   "terminated": true,
+   "truncated": false,
+   "lines": 1345,
+   "score": 151100,
+   "pieces": 3404
+  }
+ }
+}

@@ -19,9 +19,12 @@ Why the numbers can look inconsistent
 Training games and evaluation games are different things:
   - training games use exploration (epsilon) and are cut off at
     loop.max_episode_steps pieces (2,000 in configs/full.json);
-  - evaluation games are greedy (no exploration), use the fixed evaluation
-    seeds, and are capped at 10,000 pieces like the baseline.
-So only the EVALUATION numbers are comparable to the baselines.
+  - evaluation games are greedy (no exploration), use the fixed SELECTION
+    seeds 10100.., and are capped at 10,000 pieces like the baseline.
+So only the EVALUATION numbers are comparable to the baselines. The baseline
+rows marked "(100 seeds)" are on the official seeds 10000..10099, a different
+set of games; the tuned heuristic on the same selection seeds is the fairest
+comparison. The official comparison is scripts/compare.py after training.
 """
 
 from __future__ import annotations
@@ -195,7 +198,7 @@ def report(run_dir: Path, window: int = 50, patience: int = 5, baseline_path: Pa
     out.append(f"  {'last ' + str(window):<12} {_window_stats(log[-window:])}")
 
     # --- evaluations ---
-    out.append("\nevaluation (greedy, fixed seeds, 10,000-piece cap)")
+    out.append("\nevaluation (greedy, selection seeds 10100.., 10,000-piece cap)")
     if evals:
         n = int(evals[-1]["games"])
         best = max(evals, key=lambda r: r["score_mean"])  # same rule as best.pt (best_metric = score)
@@ -269,7 +272,7 @@ def plot(run_dir: Path, window: int = 50, baseline_path: Path = BASELINE) -> Pat
         ax1.plot(steps[window - 1:], avg, color=BLUE, lw=2, label=f"training games ({window}-episode average)")
     if evals:
         ax1.plot(column(evals, "step"), column(evals, "lines_mean"), "o-", color=ORANGE, lw=2, ms=5,
-                 label="evaluation (greedy, fixed seeds)")
+                 label="evaluation (greedy, selection seeds)")
     ax1.set_ylabel("lines per game")
     ax1.set_title("Lines per game", loc="left", color=INK)
 

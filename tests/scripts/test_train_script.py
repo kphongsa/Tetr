@@ -27,7 +27,7 @@ def tiny_config(total_steps=300):
 def run(run_dir, config, resume=False, with_eval=False):
     run_dir.mkdir(exist_ok=True)
     env, learner, loop = build(config)
-    spec = eval_spec(loop, "test") if with_eval else None
+    spec = eval_spec(loop, "test", reference_path=run_dir.parent / "ref.json") if with_eval else None
     result = train(env, learner, loop, run_dir, INFO_KEYS, eval_spec=spec, tensorboard=False,
                    resume=resume, config=config)
     return result, learner
@@ -107,6 +107,20 @@ def test_eval_replays_resimulate_exactly(tmp_path):
     assert len(paths) == 2 * len(result.evals)
     for path in paths[:2]:
         r = load_replay(path)
-        assert r["game"] == "tetris" and r["seed"] in (10_000, 10_001)
+        assert r["game"] == "tetris" and r["seed"] in (10_100, 10_101)  # the selection seeds
         final = replay_episode(TetrisEnv(), r, INFO_KEYS)
         assert {k: final[k] for k in INFO_KEYS} == {k: r["metadata"][k] for k in INFO_KEYS}
+
+
+def test_selection_seeds_are_disjoint_from_final_eval_seeds(tmp_path):
+    from scripts.evaluate import EVAL_FIRST_SEED, EVAL_GAMES
+
+    _, _, loop = build(tiny_config())
+    ref = tmp_path / "ref.json"
+    spec = eval_spec(loop, "t", reference_path=ref)
+    assert not set(spec.seeds) & set(range(EVAL_FIRST_SEED, EVAL_FIRST_SEED + EVAL_GAMES))
+    assert spec.reference["score_mean"] > 0 and ref.exists()
+    # Second call: served from the cache (same numbers, nothing replayed).
+    mtime = ref.stat().st_mtime_ns
+    assert eval_spec(loop, "t", reference_path=ref).reference == spec.reference
+    assert ref.stat().st_mtime_ns == mtime
