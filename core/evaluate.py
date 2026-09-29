@@ -77,14 +77,23 @@ class StepLimit:
         return obs, reward, terminated, truncated, info
 
 
-def play_episode(env: Env, agent: Agent, seed: int, info_keys: Sequence[str] = ()) -> dict:
-    """Play one game to the end. Returns a row: seed, return, steps, how it ended, and info_keys."""
+def play_episode(env: Env, agent: Agent, seed: int, info_keys: Sequence[str] = (),
+                 record_actions: bool = False) -> dict:
+    """Play one game to the end. Returns a row: seed, return, steps, how it ended, and info_keys.
+
+    record_actions=True adds row["actions"] (every action played), which
+    with the seed is a complete replay of the game (see core/replay.py).
+    """
     obs, info = env.reset(seed=seed)
+    actions: list[int] = []
     total_reward = 0.0
     steps = 0
     terminated = truncated = False
     while not (terminated or truncated):
-        obs, reward, terminated, truncated, info = env.step(agent.act(obs, info))
+        action = agent.act(obs, info)
+        if record_actions:
+            actions.append(int(action))
+        obs, reward, terminated, truncated, info = env.step(action)
         total_reward += float(reward)
         steps += 1
     row: dict[str, Any] = {
@@ -96,6 +105,8 @@ def play_episode(env: Env, agent: Agent, seed: int, info_keys: Sequence[str] = (
     }
     for key in info_keys:
         row[key] = info[key]  # read from the FINAL info (end-of-game totals)
+    if record_actions:
+        row["actions"] = actions
     return row
 
 
@@ -118,6 +129,7 @@ def evaluate(
     seeds: Sequence[int],
     max_steps: int | None = None,
     info_keys: Sequence[str] = (),
+    record_actions: bool = False,
 ) -> dict:
     """Play one game per seed and summarize.
 
@@ -135,7 +147,7 @@ def evaluate(
     rows = []
     start = time.perf_counter()
     for seed in seeds:
-        rows.append(play_episode(capped_env, make_agent(seed), seed, info_keys))
+        rows.append(play_episode(capped_env, make_agent(seed), seed, info_keys, record_actions))
     elapsed = time.perf_counter() - start
 
     total_steps = sum(r["steps"] for r in rows)

@@ -298,3 +298,46 @@ class AfterstateTDLearner:
 
     def sync_target(self) -> None:
         self.target_net.load_state_dict(self.net.state_dict())
+
+    # ------------------------------------------------------------------
+    # Checkpointing and evaluation (step 3c)
+    # ------------------------------------------------------------------
+    def eval_agent(self) -> AfterstateValueAgent:
+        """A greedy (epsilon = 0) player that shares the CURRENT network.
+
+        It gets its own rng so evaluating never advances the training rng:
+        a run with evaluations every 50 episodes trains exactly like one
+        with evaluations every 100.
+        """
+        return AfterstateValueAgent(self.net, self.agent.candidates_fn, np.random.default_rng(0),
+                                    epsilon=0.0, gamma=self.agent.gamma, reward_scale=self.agent.reward_scale)
+
+    def state_dict(self) -> dict[str, Any]:
+        """Everything needed to continue learning, EXCEPT the replay buffer.
+
+        Why not the buffer: at 100k transitions it's ~70 MB, which would make
+        every checkpoint slow and large. On resume the buffer starts empty
+        and learning pauses for `learning_starts` steps while it refills with
+        the current (already good) policy's moves. The cost: a resumed run
+        is not bit-identical to an uninterrupted one, and there's a short
+        blip right after resuming while the network trains on a small,
+        recent-only memory.
+        """
+        return {
+            "net": self.net.state_dict(),
+            "target_net": self.target_net.state_dict(),
+            # Adam keeps running averages per weight; without them the first
+            # steps after resuming would be badly sized.
+            "optimizer": self.optimizer.state_dict(),
+            "updates": self.updates,
+            "rng": self.agent.rng.bit_generator.state,  # exploration + replay sampling
+        }
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        self.net.load_state_dict(state["net"])
+        self.target_net.load_state_dict(state["target_net"])
+        self.optimizer.load_state_dict(state["optimizer"])
+        self.updates = int(state["updates"])
+        self.agent.rng.bit_generator.state = state["rng"]
+        self._pending = None
+        self._cached = None

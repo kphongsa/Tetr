@@ -245,3 +245,27 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **CPU threads (torch_threads)**: how many CPU cores PyTorch uses for one
   calculation. For tiny networks more threads help only a little, because
   coordinating threads has its own overhead.
+- **Checkpoint**: a file with everything needed to continue training later:
+  network weights, target network, optimizer state, counters, random-number
+  generator states, config. *latest* = most recent; *best* = the one that
+  scored highest in evaluation (what we'd actually use to play).
+- **Optimizer state**: Adam's running averages for every weight. Without
+  them, the first updates after resuming would be sized wrongly.
+- **RNG state**: the exact internal position of a random number generator.
+  Saving and restoring it makes the "random" choices after resuming the same
+  ones it would have made anyway.
+- **Atomic write**: save to a temporary file, then rename it over the real
+  one. A crash mid-save leaves the old file intact rather than half-written.
+- **Resume**: continue a stopped run from its latest checkpoint. Our replay
+  buffer isn't saved (too big), so it refills for `learning_starts` steps
+  before learning continues. Resumed runs are therefore close to, but not
+  bit-identical with, uninterrupted ones.
+- **Greedy evaluation**: playing with epsilon = 0 (always the best-rated
+  move) to measure what the agent has actually learned, without the noise of
+  exploration moves.
+- **Held-out evaluation seeds**: the fixed games (10000..10099) we measure on
+  and never train on, so a good result can't come from memorizing them.
+- **Replay file**: seed + actions + metadata as JSON. Re-simulating the
+  actions from the seed reproduces the game exactly. We save the same two
+  eval seeds at every evaluation, so you can watch how the agent plays the
+  *same* piece sequence as training progresses.

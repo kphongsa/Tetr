@@ -8,10 +8,18 @@
     "epsilon_start": 1.0,
     "epsilon_end": 0.01,
     "epsilon_decay_steps": 4000,
-    "print_every_episodes": 20
+    "print_every_episodes": 20,
+    "checkpoint_every_episodes": 20,
+    "eval_every_episodes": 100,
+    "eval_games": 10,
+    "replays_per_eval": 2,
+    "best_metric": "score"
   },
   "learner": {
-    "hidden": [64, 64],
+    "hidden": [
+      64,
+      64
+    ],
     "net_seed": 0,
     "rng_seed": 0,
     "gamma": 0.99,

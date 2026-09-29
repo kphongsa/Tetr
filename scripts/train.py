@@ -4,20 +4,30 @@ Run from the repo root:
     python -m scripts.train --config configs/smoke.json            # ~1 minute sanity run
     python -m scripts.train --config configs/smoke.json --fresh    # same, deleting an old runs/smoke/
     python -m scripts.train --config configs/smoke.json --name try2
+    python -m scripts.train --resume smoke                         # continue runs/smoke/ where it stopped
+    python -m scripts.train --resume smoke --total-steps 50000     # ...and train for longer than planned
 
-Writes runs/<name>/{config.json, log.csv, tb/}. Watch live with
+Ctrl+C saves a checkpoint and exits; --resume continues from it.
+
+Writes runs/<name>/{config.json, log.csv, eval.csv, tb/, checkpoints/, replays/}.
+Watch live with
     tensorboard --logdir runs
 then open http://localhost:6006 in a browser.
 
+Evaluation during training uses the first `eval_games` seeds and the piece
+cap of results/baseline_heuristic.json, and logs the baseline's results on
+those same games alongside ours (ref_* columns).
+
 This script is the only place where Tetris and the generic parts meet:
-it builds the Tetris env and the Tetris candidates function and hands
-them to the game-agnostic agent, learner and training loop.
+it builds the Tetris env and candidates function and hands them to the
+game-agnostic agent, learner and training loop.
 """
 
 from __future__ import annotations
 
 import argparse
 import copy
+import json
 from dataclasses import asdict
 from pathlib import Path
 
@@ -25,12 +35,14 @@ import numpy as np
 import torch
 
 from agents.afterstate_value_agent import AfterstateTDLearner, AfterstateValueAgent, TDConfig, make_value_net
-from core.train import LoopConfig, format_config, load_config, make_run_dir, train
+from core.evaluate import git_commit
+from core.train import EvalSpec, LoopConfig, format_config, load_config, make_run_dir, train
 from games.tetris.env import TetrisEnv
 from games.tetris.features import FEATURE_NAMES, candidates
 from scripts.evaluate import EVAL_FIRST_SEED, EVAL_GAMES
 
 ROOT = Path(__file__).resolve().parents[1]
+BASELINE = ROOT / "results" / "baseline_heuristic.json"
 INFO_KEYS = ("lines", "score", "pieces")
 
 
@@ -57,7 +69,7 @@ def build(config: dict) -> tuple[TetrisEnv, AfterstateTDLearner, LoopConfig]:
 
 def full_config(config: dict) -> dict:
     """The config with every default filled in, so the saved copy is complete."""
-    env, learner, loop = build(config)
+    _, learner, loop = build(config)
     out = copy.deepcopy(config)
     out["loop"] = asdict(loop)
     out["learner"] = asdict(learner.cfg)
@@ -65,26 +77,69 @@ def full_config(config: dict) -> dict:
     return out
 
 
+def eval_spec(loop: LoopConfig, run_name: str, baseline_path: Path = BASELINE) -> EvalSpec:
+    """Evaluation on the baseline's seeds and cap, with the baseline's numbers on the same games."""
+    baseline = json.loads(Path(baseline_path).read_text())
+    seeds = baseline["seeds"][: loop.eval_games]
+    games = {g["seed"]: g for g in baseline["games"]}
+    reference = {f"{k}_mean": float(np.mean([games[s][k] for s in seeds])) for k in INFO_KEYS}
+    return EvalSpec(
+        env=TetrisEnv(),
+        seeds=seeds,
+        max_steps=baseline["max_pieces"],
+        info_keys=INFO_KEYS,
+        reference=reference,
+        game="tetris",
+        replay_metadata={"agent": "afterstate_value", "run": run_name, "git": git_commit()["commit"]},
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--name", help="run name (default: the config's 'name')")
+    parser.add_argument("--config", type=Path, help="start a new run from this config")
+    parser.add_argument("--resume", metavar="NAME", help="continue runs/NAME/ from its latest checkpoint")
+    parser.add_argument("--name", help="run name for a new run (default: the config's 'name')")
     parser.add_argument("--fresh", action="store_true", help="delete runs/<name>/ first if it exists")
+    parser.add_argument("--total-steps", type=int, help="override loop.total_steps (e.g. to extend a run)")
     parser.add_argument("--no-tensorboard", action="store_true")
     args = parser.parse_args()
+    if (args.config is None) == (args.resume is None):
+        parser.error("give exactly one of --config (new run) or --resume NAME")
 
-    config = load_config(args.config)
-    if args.name:
-        config["name"] = args.name
-    config = full_config(config)
+    if args.resume:
+        run_dir = ROOT / "runs" / args.resume
+        if not (run_dir / "checkpoints" / "latest.pt").exists():
+            parser.error(f"no checkpoint to resume in {run_dir}")
+        config = load_config(run_dir / "config.json")
+    else:
+        config = load_config(args.config)
+        if args.name:
+            config["name"] = args.name
+        config = full_config(config)
+    if args.total_steps is not None:
+        config["loop"]["total_steps"] = args.total_steps
+
     print(f"run {config['name']!r}, config:\n{format_config(config)}\n")
+    if args.resume:
+        (run_dir / "config.json").write_text(format_config(config))  # records any --total-steps change
+    else:
+        run_dir = make_run_dir(ROOT / "runs", config["name"], config, fresh=args.fresh)
 
-    run_dir = make_run_dir(ROOT / "runs", config["name"], config, fresh=args.fresh)
     env, learner, loop = build(config)
+    spec = eval_spec(loop, config["name"])
     print(f"replay buffer: {learner.buffer.nbytes() / 1e6:.0f} MB, "
-          f"network: {sum(p.numel() for p in learner.net.parameters())} parameters\n")
-    train(env, learner, loop, run_dir, INFO_KEYS, tensorboard=not args.no_tensorboard)
-    print(f"\nlogs in {run_dir.relative_to(ROOT)}")
+          f"network: {sum(p.numel() for p in learner.net.parameters())} parameters")
+    print(f"evaluating every {loop.eval_every_episodes} episodes on seeds {spec.seeds[0]}..{spec.seeds[-1]}, "
+          f"cap {spec.max_steps}; baseline on these games: "
+          + ", ".join(f"{k} {v:.1f}" for k, v in spec.reference.items()) + "\n")
+
+    result = train(env, learner, loop, run_dir, INFO_KEYS, eval_spec=spec,
+                   tensorboard=not args.no_tensorboard, resume=bool(args.resume), config=config)
+    rel = run_dir.relative_to(ROOT)
+    if result.interrupted:
+        print(f"resume with:  python -m scripts.train --resume {config['name']}")
+    else:
+        print(f"\ndone. logs in {rel}, checkpoints in {rel / 'checkpoints'}")
 
 
 if __name__ == "__main__":
