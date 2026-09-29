@@ -193,3 +193,55 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   the memory of NumPy's float64 and plenty precise for neural networks.
 - **PyTorch**: the deep-learning library we use: tensors (NumPy-like arrays)
   plus automatic gradient computation and optimizers.
+- **Temporal-difference (TD) learning**: learn a guess from a slightly better
+  guess made one step later, instead of waiting for the game to end. After
+  each move, nudge V(this afterstate) toward "reward of the next move +
+  gamma × V(next afterstate)".
+- **TD target**: that "slightly better guess": the number the network is
+  trained to output for a given afterstate on this update.
+- **Bootstrapping**: using the network's own estimate of the future (V of the
+  next position) inside its training target. Done when the game continues,
+  including when it was only *truncated*; not done at a real game over,
+  where the future is worth nothing (or the game-over penalty).
+- **Discount factor (gamma, γ)**: how much a reward one step later counts
+  compared to now (0.99 → about a 100-step horizon). Keeps values finite.
+- **Transition**: one move's record in memory: (afterstate chosen, did the
+  game end, all afterstates available on the next piece).
+- **Replay buffer**: a big ring of recent transitions; training samples random
+  batches from it so consecutive, near-identical moves don't dominate.
+- **Target network**: a frozen copy of the network used only to compute TD
+  targets, refreshed every N updates, so the network isn't chasing a target
+  that moves at every step.
+- **Loss**: one number measuring how wrong predictions are on a batch;
+  training lowers it. **Huber loss**: squared error for small errors, linear
+  for big ones, so a few surprising samples can't cause huge updates.
+- **Gradient step / backpropagation**: `loss.backward()` computes how the
+  loss changes with every weight (backpropagation); the optimizer then moves
+  each weight slightly in the direction that lowers the loss.
+- **Optimizer (Adam)**: the rule for turning gradients into weight changes.
+  Adam adapts each weight's step size to how noisy its gradient has been.
+- **Learning rate**: the overall size of each weight change. Too high →
+  unstable/diverges; too low → learns very slowly.
+- **Batch size**: how many transitions are averaged per update. Bigger =
+  smoother but slower updates.
+- **learning_starts**: wait until the buffer has some variety before training.
+- **Reward shaping**: adding reward the game doesn't give (our survival bonus
+  and game-over penalty) to make learning easier. Risk: the agent optimizes
+  the shaped reward, not the real goal. So we always *evaluate* on real score.
+- **Reward scaling**: dividing rewards (800 → 8) so values and losses stay
+  in a range networks handle well.
+- **Why the TD loss can go UP while the agent improves**: the loss is in
+  value units. As the agent survives longer, the true values grow (from ~0
+  to ~10+), so the same *relative* error is a bigger absolute error, and the
+  targets themselves keep shifting as the policy changes. Judge progress by
+  lines/score, not by the loss alone. The loss is mainly a crash detector
+  (explosions, NaN).
+- **Irreducible error**: error no network can remove because the outcome is
+  random given what it sees (e.g. whether the next piece can spawn).
+- **TensorBoard**: a local web page that plots logged numbers live.
+  `tensorboard --logdir runs`, then open http://localhost:6006.
+- **Hyperparameter**: a setting chosen by us, not learned (learning rate,
+  gamma, batch size...). All of ours live in the run config JSON.
+- **CPU threads (torch_threads)**: how many CPU cores PyTorch uses for one
+  calculation. For tiny networks more threads help only a little, because
+  coordinating threads has its own overhead.

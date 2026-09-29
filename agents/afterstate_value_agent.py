@@ -24,11 +24,16 @@ different function and the same agent.
 
 from __future__ import annotations
 
+import copy
+from dataclasses import dataclass
 from typing import Any, Callable, Protocol, Sequence
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
+
+from core.replay_buffer import ReplayBuffer
 
 
 class CandidateSet(Protocol):
@@ -81,7 +86,7 @@ class AfterstateValueAgent:
     def __init__(
         self,
         net: nn.Module,
-        candidates_fn: Callable[[Any, dict], CandidateSet],
+        candidates_fn: Callable[[Any, dict], Any],  # returns a CandidateSet-like object
         rng: np.random.Generator,
         epsilon: float = 0.0,
         gamma: float = 0.99,
@@ -103,14 +108,15 @@ class AfterstateValueAgent:
         """Q(a) = scaled immediate reward + gamma * value of the afterstate, per candidate."""
         return self.reward_scale * cands.rewards + self.gamma * self.values(cands.features)
 
-    def choose(self, obs, info) -> tuple[int, CandidateSet]:
+    def choose(self, obs, info, cands: CandidateSet | None = None) -> tuple[int, CandidateSet]:
         """Index of the chosen candidate, plus the candidates themselves.
 
-        The training loop (step 3b) needs both: the chosen afterstate's
-        features are what gets a TD update. Returning them avoids computing
-        every afterstate twice.
+        The learner needs both: the chosen afterstate's features are what
+        gets a TD update. Returning them (and accepting precomputed ones)
+        avoids computing every afterstate twice.
         """
-        cands = self.candidates_fn(obs, info)
+        if cands is None:
+            cands = self.candidates_fn(obs, info)
         # Epsilon-greedy: explore with probability epsilon. We draw the coin
         # flip even when epsilon is 0, so the rng advances identically
         # regardless of epsilon (keeps runs comparable and easy to reason about).
@@ -124,3 +130,171 @@ class AfterstateValueAgent:
     def act(self, obs, info) -> int:
         idx, cands = self.choose(obs, info)
         return cands.actions[idx]
+
+
+# ----------------------------------------------------------------------
+# Learning (step 3b)
+# ----------------------------------------------------------------------
+@dataclass
+class TDConfig:
+    """Hyperparameters of the network and its TD learning. All chosen, none learned."""
+
+    hidden: tuple[int, ...] = (64, 64)  # hidden layer sizes of the MLP
+    net_seed: int = 0  # starting weights
+    rng_seed: int = 0  # rng for exploration and replay sampling
+    gamma: float = 0.99  # discount factor
+    lr: float = 1e-3  # learning rate (Adam)
+    batch_size: int = 128
+    buffer_capacity: int = 100_000  # replay buffer size, in transitions
+    learning_starts: int = 1_000  # don't update until the buffer holds this many
+    target_update_every: int = 1_000  # copy online -> target network every N updates
+    huber_delta: float = 1.0  # Huber loss: squared below this error, linear above
+    # Reward shaping: the learner's view only. Logs and evaluation use the real score.
+    reward_scale: float = 0.01  # 100/300/500/800 points -> 1/3/5/8
+    survival_bonus: float = 0.1  # added to every placement's reward
+    game_over_value: float = -2.0  # TD target for an afterstate that led to game over
+
+
+class AfterstateTDLearner:
+    """Teaches an AfterstateValueAgent's network from its own games: TD(0) + replay + target network.
+
+    What gets stored per move (one "transition")
+    --------------------------------------------
+    After playing action a_t from state s_t we land in afterstate s'_t; then
+    the next piece arrives, giving state s_{t+1}. We store:
+
+        x            features of s'_t (the afterstate we chose)
+        terminated   did the game end right after s'_t?
+        next_x       features of EVERY legal afterstate from s_{t+1}  (padded)
+        next_r       their immediate raw rewards                      (padded)
+        next_mask    which of the padded rows are real
+
+    TD target for V(s'_t)
+    ---------------------
+        terminated:  game_over_value
+        otherwise:   max over a' of [ scale*r(a') + bonus + gamma * V_target(s'_{t+1}(a')) ]
+
+    "Otherwise" includes TRUNCATED (training cap reached): the game could
+    have continued, so we bootstrap from the next position exactly as usual.
+    Only a real game over has no future. So `truncated` isn't even needed
+    for the target; what matters is whether the game truly ended.
+
+    Why store every next candidate instead of recomputing later? The max has
+    to use the CURRENT target network each time a transition is replayed,
+    and recomputing afterstates at sample time would be the slowest part of
+    training. 40 x 4 floats per transition is small (~70 MB for 100k).
+    """
+
+    stat_names: tuple[str, ...] = ("loss", "value_mean", "target_mean")
+
+    def __init__(self, agent: AfterstateValueAgent, cfg: TDConfig, n_features: int, max_candidates: int) -> None:
+        self.agent = agent
+        self.cfg = cfg
+        self.net = agent.net
+        # The target network: a frozen copy used ONLY to compute TD targets.
+        self.target_net = copy.deepcopy(self.net)
+        self.target_net.requires_grad_(False)
+        # Adam: the optimizer. It turns gradients into weight changes, with a
+        # per-weight step size that adapts to how noisy that weight's gradient is.
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg.lr)
+        self.buffer = ReplayBuffer(
+            cfg.buffer_capacity,
+            {
+                "x": ((n_features,), np.float32),
+                "terminated": ((), np.bool_),
+                "next_x": ((max_candidates, n_features), np.float32),
+                "next_r": ((max_candidates,), np.float32),
+                "next_mask": ((max_candidates,), np.bool_),
+            },
+            agent.rng,  # one rng for the whole learner: exploration + sampling
+        )
+        self.max_candidates = max_candidates
+        self.updates = 0
+        self._pending: tuple[np.ndarray, float] | None = None  # (x, raw reward) of the move just chosen
+        self._cached: tuple[dict, CandidateSet] | None = None  # (info, its candidates)
+
+    # The loop sets epsilon on the learner; the agent is what actually uses it.
+    @property
+    def epsilon(self) -> float:
+        return self.agent.epsilon
+
+    @epsilon.setter
+    def epsilon(self, value: float) -> None:
+        self.agent.epsilon = value
+
+    # ------------------------------------------------------------------
+    def act(self, obs, info) -> int:
+        # observe() already computed the candidates for this exact info dict.
+        # `is` (identity) guarantees they're never reused for a different state.
+        cached = self._cached[1] if self._cached is not None and self._cached[0] is info else None
+        idx, cands = self.agent.choose(obs, info, cached)
+        self._pending = (cands.features[idx], float(cands.rewards[idx]))
+        return cands.actions[idx]
+
+    def observe(self, action, reward, terminated, truncated, next_obs, next_info) -> None:
+        if self._pending is None:
+            raise RuntimeError("observe() called without a preceding act()")
+        x, expected_reward = self._pending
+        self._pending = None
+        # Cheap, always-on consistency check: the reward the agent predicted
+        # for its move must be exactly what the game paid. If afterstates ever
+        # drift from real play, training stops here instead of quietly
+        # learning from wrong data.
+        if float(reward) != expected_reward:
+            raise AssertionError(f"predicted reward {expected_reward} but env paid {reward}")
+
+        n, d = self.max_candidates, x.shape[0]
+        next_x = np.zeros((n, d), dtype=np.float32)
+        next_r = np.zeros(n, dtype=np.float32)
+        next_mask = np.zeros(n, dtype=bool)
+        self._cached = None
+        if not terminated:
+            cands = self.agent.candidates_fn(next_obs, next_info)
+            k = len(cands.actions)
+            next_x[:k], next_r[:k], next_mask[:k] = cands.features, cands.rewards, True
+            self._cached = (next_info, cands)
+        self.buffer.add(x=x, terminated=terminated, next_x=next_x, next_r=next_r, next_mask=next_mask)
+
+    # ------------------------------------------------------------------
+    def td_targets(self, batch: dict[str, np.ndarray]) -> torch.Tensor:
+        """TD target for each transition in the batch (see the class docstring)."""
+        cfg = self.cfg
+        next_x = torch.from_numpy(batch["next_x"])
+        b, n = next_x.shape[:2]
+        mask = torch.from_numpy(batch["next_mask"])
+        with torch.no_grad():  # targets are fixed numbers to aim at, not something to learn through
+            # Run the network only on real rows (next_x[mask] -> (k, d)); padding
+            # is ~35% of rows and this forward pass is the costliest part of an update.
+            v_next = torch.zeros(b, n)
+            v_next[mask] = self.target_net(next_x[mask])
+            q_next = cfg.reward_scale * torch.from_numpy(batch["next_r"]) + cfg.survival_bonus + cfg.gamma * v_next
+            # Padding rows aren't real moves: make sure max() can never pick them.
+            q_next = q_next.masked_fill(~mask, float("-inf"))
+            best = q_next.max(dim=1).values
+            # For terminated rows every entry is masked, so `best` is -inf there;
+            # torch.where discards it and uses game_over_value instead.
+            terminated = torch.from_numpy(batch["terminated"])
+            return torch.where(terminated, torch.full_like(best, cfg.game_over_value), best)
+
+    def update(self) -> dict[str, float] | None:
+        """One gradient step on a random batch. None while the buffer is still filling."""
+        cfg = self.cfg
+        if len(self.buffer) < max(cfg.learning_starts, cfg.batch_size):
+            return None
+        batch = self.buffer.sample(cfg.batch_size)
+        target = self.td_targets(batch)
+        pred = self.net(torch.from_numpy(batch["x"]))
+        loss = F.huber_loss(pred, target, delta=cfg.huber_delta)
+
+        self.optimizer.zero_grad()  # gradients add up by default; clear the previous step's
+        loss.backward()  # compute d(loss)/d(weight) for every weight
+        self.optimizer.step()  # move every weight a little in the direction that lowers the loss
+
+        self.updates += 1
+        if self.updates % cfg.target_update_every == 0:
+            self.sync_target()
+        # .item() pulls a plain Python number out of a 1-element tensor.
+        return {"loss": loss.item(), "value_mean": pred.mean().item(), "target_mean": target.mean().item()}
+
+    def sync_target(self) -> None:
+        self.target_net.load_state_dict(self.net.state_dict())

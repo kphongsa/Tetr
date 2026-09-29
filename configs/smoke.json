@@ -1,0 +1,28 @@
+{
+  "name": "smoke",
+  "torch_threads": 4,
+  "loop": {
+    "total_steps": 8000,
+    "max_episode_steps": 500,
+    "train_seed_start": 1000000,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.01,
+    "epsilon_decay_steps": 4000,
+    "print_every_episodes": 20
+  },
+  "learner": {
+    "hidden": [64, 64],
+    "net_seed": 0,
+    "rng_seed": 0,
+    "gamma": 0.99,
+    "lr": 0.001,
+    "batch_size": 128,
+    "buffer_capacity": 20000,
+    "learning_starts": 1000,
+    "target_update_every": 500,
+    "huber_delta": 1.0,
+    "reward_scale": 0.01,
+    "survival_bonus": 0.1,
+    "game_over_value": -2.0
+  }
+}
