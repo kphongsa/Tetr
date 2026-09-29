@@ -35,6 +35,7 @@ import numpy as np
 import torch
 
 from agents.afterstate_value_agent import AfterstateTDLearner, AfterstateValueAgent, TDConfig, make_value_net
+from core.checkpoint import load_checkpoint
 from core.evaluate import git_commit
 from core.train import EvalSpec, LoopConfig, format_config, load_config, make_run_dir, train
 from games.tetris.env import TetrisEnv
@@ -75,6 +76,14 @@ def full_config(config: dict) -> dict:
     out["learner"] = asdict(learner.cfg)
     out.setdefault("torch_threads", 4)
     return out
+
+
+def load_eval_agent(checkpoint_path: Path) -> tuple[AfterstateValueAgent, dict]:
+    """Greedy agent from a checkpoint (rebuilt from the config stored inside it), plus the checkpoint."""
+    ck = load_checkpoint(checkpoint_path)
+    _, learner, _ = build(ck["config"])
+    learner.load_state_dict(ck["learner"])
+    return learner.eval_agent(), ck
 
 
 def eval_spec(loop: LoopConfig, run_name: str, baseline_path: Path = BASELINE) -> EvalSpec:
