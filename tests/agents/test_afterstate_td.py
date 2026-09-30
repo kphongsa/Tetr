@@ -108,3 +108,20 @@ def test_updates_lower_the_loss_on_fixed_data_and_target_is_frozen():
 def test_no_update_while_buffer_fills():
     lr = make_learner()
     assert lr.update() is None
+
+
+def test_learning_rate_decays_linearly_then_stays():
+    import dataclasses
+
+    cfg = TDConfig(lr=1e-3, lr_end=1e-4, lr_decay_steps=100)
+    agent = AfterstateValueAgent(make_value_net(4, cfg.hidden, 0), None, np.random.default_rng(0))
+    learner = AfterstateTDLearner(agent, cfg, n_features=4, max_candidates=3)
+    assert learner.current_lr() == pytest.approx(1e-3)
+    learner.updates = 50
+    assert learner.current_lr() == pytest.approx(5.5e-4)
+    learner.updates = 10_000
+    assert learner.current_lr() == pytest.approx(1e-4)
+    # Default: constant.
+    const = AfterstateTDLearner(agent, dataclasses.replace(cfg, lr_end=None), 4, 3)
+    const.updates = 10_000
+    assert const.current_lr() == 1e-3

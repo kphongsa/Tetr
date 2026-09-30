@@ -193,3 +193,12 @@ def test_ctrl_c_during_evaluation_still_saves_and_resumes(tmp_path):
     resumed = train(CountdownEnv(), FakeLearner(), cfg(total_steps=40, checkpoint_every_episodes=1000),
                     tmp_path, tensorboard=False, resume=True)
     assert resumed.rows[0]["episode"] == 4 and not resumed.interrupted
+
+
+def test_keep_eval_checkpoints_saves_one_per_evaluation(tmp_path):
+    spec = EvalSpec(env=CountdownEnv(), seeds=[2], max_steps=None, info_keys=("left",))
+    c = cfg(total_steps=30, eval_every_episodes=4, keep_eval_checkpoints=True, best_metric="left")
+    res = train(CountdownEnv(), FakeLearner(), c, tmp_path, eval_spec=spec, tensorboard=False)
+    saved = sorted((tmp_path / "checkpoints").glob("step*.pt"))
+    assert len(saved) == len(res.evals) >= 2
+    assert load_checkpoint(saved[0])["progress"]["step"] == res.evals[0]["step"]

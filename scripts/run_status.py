@@ -253,6 +253,9 @@ def report(run_dir: Path, window: int = 50, patience: int = 5, baseline_path: Pa
                    f"   (ceiling {hard:.0f} = best possible; ~{typical:.0f} = tuned-heuristic-level play)")
         out.append(f"  loss: median {np.median(loss):.4f}, latest {loss[-1]:.4f}   "
                    + (f"(first {window} logged: median {np.median(early_loss):.4f})" if len(early_loss) else ""))
+        lrs = column(recent, "lr")
+        if len(lrs):
+            out.append(f"  learning rate: {lrs[-1]:.2e} (start {config['learner']['lr']:.0e})")
     else:
         out.append("  not learning yet (replay buffer still filling)")
 

@@ -34,3 +34,9 @@ def test_load_eval_agent_restores_trained_weights(tmp_path):
     assert agent.epsilon == 0.0
     for p, q in zip(agent.net.parameters(), learner.net.parameters()):
         assert torch.equal(p, q)
+
+
+def test_lr_decay_config_is_valid():
+    cfg = json.loads((ROOT / "configs" / "lr_decay.json").read_text())
+    _, learner, loop = build(cfg)
+    assert learner.cfg.lr_end < learner.cfg.lr and loop.keep_eval_checkpoints

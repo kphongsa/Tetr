@@ -75,6 +75,9 @@ class LoopConfig:
     eval_games: int = 20  # how many of the evaluation seeds to play each time
     replays_per_eval: int = 2  # sample games saved per evaluation (the first seeds)
     best_metric: str = "score"  # best.pt = highest mean of this eval metric
+    # Also save checkpoints/step<N>.pt at every evaluation, so the best few
+    # can be re-checked on more games later (a 20-50 game evaluation is noisy).
+    keep_eval_checkpoints: bool = False
 
 
 @dataclass
@@ -381,6 +384,8 @@ def train(
                 eval_log.write(eval_row)
                 tb.log("eval", eval_row, progress.step, skip=("step", "episode"))
                 evals.append(eval_row)
+                if cfg.keep_eval_checkpoints:
+                    save(f"step{progress.step:09d}.pt")
                 is_best = progress.best is None or metric > progress.best
                 if is_best:
                     progress.best = metric

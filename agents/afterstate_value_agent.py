@@ -144,6 +144,13 @@ class TDConfig:
     rng_seed: int = 0  # rng for exploration and replay sampling
     gamma: float = 0.99  # discount factor
     lr: float = 1e-3  # learning rate (Adam)
+    # Learning-rate decay: the rate falls in a straight line from `lr` to
+    # `lr_end` over the first `lr_decay_steps` updates, then stays at lr_end.
+    # None = constant rate. Why: once the agent is decent, big weight changes
+    # mostly reshuffle which placement wins (policy churn); small late steps
+    # let it settle on a good policy instead of wandering around it.
+    lr_end: float | None = None
+    lr_decay_steps: int = 0
     batch_size: int = 128
     buffer_capacity: int = 100_000  # replay buffer size, in transitions
     learning_starts: int = 1_000  # don't update until the buffer holds this many
@@ -188,7 +195,7 @@ class AfterstateTDLearner:
     # value_max: the largest prediction in the batch. Its per-episode average
     # is what scripts/run_status.py compares against the theoretical ceiling
     # (runaway values are a classic sign of TD learning going unstable).
-    stat_names: tuple[str, ...] = ("loss", "value_mean", "value_max", "target_mean")
+    stat_names: tuple[str, ...] = ("loss", "value_mean", "value_max", "target_mean", "lr")
 
     def __init__(self, agent: AfterstateValueAgent, cfg: TDConfig, n_features: int, max_candidates: int) -> None:
         self.agent = agent
@@ -279,6 +286,13 @@ class AfterstateTDLearner:
             terminated = torch.from_numpy(batch["terminated"])
             return torch.where(terminated, torch.full_like(best, cfg.game_over_value), best)
 
+    def current_lr(self) -> float:
+        cfg = self.cfg
+        if cfg.lr_end is None or cfg.lr_decay_steps <= 0:
+            return cfg.lr
+        frac = min(1.0, self.updates / cfg.lr_decay_steps)
+        return cfg.lr + frac * (cfg.lr_end - cfg.lr)
+
     def update(self) -> dict[str, float] | None:
         """One gradient step on a random batch. None while the buffer is still filling."""
         cfg = self.cfg
@@ -289,6 +303,9 @@ class AfterstateTDLearner:
         pred = self.net(torch.from_numpy(batch["x"]))
         loss = F.huber_loss(pred, target, delta=cfg.huber_delta)
 
+        lr = self.current_lr()
+        for group in self.optimizer.param_groups:  # Adam reads its step size from here every step
+            group["lr"] = lr
         self.optimizer.zero_grad()  # gradients add up by default; clear the previous step's
         loss.backward()  # compute d(loss)/d(weight) for every weight
         self.optimizer.step()  # move every weight a little in the direction that lowers the loss
@@ -298,7 +315,7 @@ class AfterstateTDLearner:
             self.sync_target()
         # .item() pulls a plain Python number out of a 1-element tensor.
         return {"loss": loss.item(), "value_mean": pred.mean().item(), "value_max": pred.max().item(),
-                "target_mean": target.mean().item()}
+                "target_mean": target.mean().item(), "lr": lr}
 
     def sync_target(self) -> None:
         self.target_net.load_state_dict(self.net.state_dict())
