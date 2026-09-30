@@ -19,7 +19,7 @@ That removes most of the luck of the draw, so it detects smaller real
 differences than comparing two averages would.
 
 Writes results/step3_comparison.json (all numbers + per-game results) and
-results/step3_comparison.md (the table).
+results/step3_comparison.md (the table); --out NAME writes results/NAME.* instead.
 """
 
 from __future__ import annotations
@@ -69,6 +69,8 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--games", type=int, default=None, help="use only the first N eval seeds (default: all)")
     parser.add_argument("--no-save", action="store_true")
+    parser.add_argument("--out", default="step3_comparison",
+                        help="results/<OUT>.json and .md (default: step3_comparison)")
     args = parser.parse_args()
 
     baseline = json.loads(BASELINE.read_text())
@@ -128,12 +130,12 @@ def main() -> None:
         "learned_games": learned["games"],
     }
     RESULTS.mkdir(exist_ok=True)
-    (RESULTS / "step3_comparison.json").write_text(json.dumps(payload, indent=2))
-    (RESULTS / "step3_comparison.md").write_text(
+    (RESULTS / f"{args.out}.json").write_text(json.dumps(payload, indent=2))
+    (RESULTS / f"{args.out}.md").write_text(
         f"# Step 3: learned agent vs baselines\n\n"
         f"{len(seeds)} games, seeds {seeds[0]}..{seeds[-1]}, cap {cap:,} pieces, greedy play.\n"
         f"Checkpoint: `{args.checkpoint}` (training step {progress['step']:,}).\n\n{md}\n\n{verdict}\n")
-    print("\nsaved results/step3_comparison.json and results/step3_comparison.md")
+    print(f"\nsaved results/{args.out}.json and results/{args.out}.md")
 
 
 if __name__ == "__main__":

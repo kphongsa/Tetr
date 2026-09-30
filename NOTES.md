@@ -319,3 +319,13 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   network *predict* its future reward accurately; CEM (step 2d) directly
   searched for weights that *score* the most. A better predictor is not
   automatically a better player, especially with only 4 input features.
+- **Run-to-run variance**: two training runs that differ only slightly (here,
+  the learning rate at step 7,000 was 0.00096 instead of 0.001) can follow
+  completely different paths: run 1 cleared ~200 lines at step 7k, run 2
+  ~10. One run proves "this setup *can* do it", not "it reliably does".
+  Serious comparisons use several runs with different seeds.
+- **Early stopping / checkpoint selection**: keeping the checkpoint that did
+  best on held-out games instead of the last one. For us it matters a lot:
+  the network peaked mid-training and then got worse, so the last
+  checkpoint would have lost to the tuned heuristic while the selected one
+  beat it.
