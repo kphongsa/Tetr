@@ -293,3 +293,29 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   already did well, because newer training data pushed its weights elsewhere.
   It shows up as evaluation scores that rise and then fall. We keep best.pt
   for this reason.
+- **Selection seeds (validation set)**: games used only to *choose* which
+  checkpoint to keep, kept separate from the final test games. Choosing on
+  the test games would make the final number look better than it really is.
+- **Winner's curse (selection bias)**: if you measure many noisy candidates and
+  keep the best-looking one, its measured score is partly luck, so it will
+  usually score lower when re-measured. Our best.pt looked like 775 lines on
+  20 selection games but scored 456 on the 100 test games.
+- **Standard error (SE) of the mean**: how much an average would wobble if you
+  repeated the measurement with new games: spread ÷ √(number of games). With
+  Tetris spreads of ~500 lines, 20 games gives an SE of ~115 lines, which is
+  why 20-game evaluations jumped around so much.
+- **Policy churn**: with a value-based agent, a small change in the network
+  can flip which placement comes out on top in many positions, so the
+  agent's *behavior* can change a lot between checkpoints even when the loss
+  barely moves. A constant learning rate keeps the weights, and so the
+  behavior, drifting.
+- **Learning-rate decay**: shrinking the learning rate as training goes on, so
+  late updates are small refinements instead of big jumps. It's a standard
+  cure for churn once performance has leveled off.
+- **Horizon (effective horizon)**: how far ahead the value "looks": about
+  1 / (1 − γ) steps. With γ = 0.99 that's ~100 pieces, so a hole that only
+  kills you 500 pieces later barely registers.
+- **Prediction objective vs. performance objective**: TD learning makes the
+  network *predict* its future reward accurately; CEM (step 2d) directly
+  searched for weights that *score* the most. A better predictor is not
+  automatically a better player, especially with only 4 input features.
