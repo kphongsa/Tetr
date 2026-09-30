@@ -99,7 +99,7 @@ def main() -> None:
         s: dict = {k: summarize([g[k] for g in tuned_games]) for k in INFO_KEYS}
         s.update(games=len(tuned_games), capped=sum(g["truncated"] for g in tuned_games))
         summaries[baseline["agent"]] = s
-    summaries["learned (TD, features)"] = learned["summary"]
+    summaries[f"learned (TD, {ck['config'].get('inputs', 'features')})"] = learned["summary"]
 
     md = table(summaries)
     pairs = {k: paired(learned["games"], tuned_games, k) for k in ("score", "lines")}
