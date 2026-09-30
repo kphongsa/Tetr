@@ -139,3 +139,29 @@ def candidates(obs: dict, info: dict) -> Candidates:
         rewards=np.array([LINE_CLEAR_SCORES[a.lines_cleared] for a in states], dtype=np.float64),
         grids=[a.grid for a in states],
     )
+
+
+# ----------------------------------------------------------------------
+# Raw-board candidates (step 3e)
+# ----------------------------------------------------------------------
+RAW_INPUTS = HEIGHT * 10  # 22 x 10 cells, flattened row by row
+
+
+def raw_candidates(obs: dict, info: dict) -> Candidates:
+    """Like candidates(), but the network input is the afterstate board itself.
+
+    Each placement's input is its 22 x 10 afterstate flattened to 220 numbers,
+    1.0 = filled, 0.0 = empty (hidden spawn rows included: a block up there
+    means you're about to lose, which is worth seeing). No hand-picked
+    features: the network has to work out for itself what "hole" or "height"
+    means. The immediate reward is still given separately, exactly as in
+    candidates(), because cleared rows are already gone from the afterstate.
+    """
+    states = afterstates(obs["board"], info["placements"])
+    raw = np.array([(a.grid != 0).reshape(-1) for a in states], dtype=np.float32)
+    return Candidates(
+        actions=[a.placement.action for a in states],
+        features=raw,
+        rewards=np.array([LINE_CLEAR_SCORES[a.lines_cleared] for a in states], dtype=np.float64),
+        grids=[a.grid for a in states],
+    )

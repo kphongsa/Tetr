@@ -124,3 +124,31 @@ def test_selection_seeds_are_disjoint_from_final_eval_seeds(tmp_path):
     mtime = ref.stat().st_mtime_ns
     assert eval_spec(loop, "t", reference_path=ref).reference == spec.reference
     assert ref.stat().st_mtime_ns == mtime
+
+
+def test_raw_board_training_end_to_end(tmp_path):
+    config = tiny_config(total_steps=200)
+    config["inputs"] = "raw"
+    config["learner"].update(binary_inputs=True, buffer_capacity=2000)
+    result, learner = run(tmp_path / "run", config, with_eval=True)
+    assert learner.net.net[0].in_features == 220
+    assert result.rows[-1]["loss"] != ""  # it did learn from packed transitions
+    # The checkpoint rebuilds a raw-input agent from its stored config.
+    from scripts.train import load_eval_agent
+    agent, _ = load_eval_agent(tmp_path / "run" / "checkpoints" / "latest.pt")
+    assert agent.net.net[0].in_features == 220
+
+
+def test_raw_inputs_require_bit_packing():
+    config = tiny_config()
+    config["inputs"] = "raw"
+    with pytest.raises(ValueError, match="binary_inputs"):
+        build(config)
+
+
+def test_old_configs_without_inputs_key_use_features():
+    config = tiny_config()
+    config.pop("inputs", None)
+    _, learner, _ = build(config)
+    assert learner.net.net[0].in_features == 4
+    assert full_config(config)["inputs"] == "features"

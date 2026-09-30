@@ -151,6 +151,11 @@ class TDConfig:
     # let it settle on a good policy instead of wandering around it.
     lr_end: float | None = None
     lr_decay_steps: int = 0
+    # Inputs are all 0/1 (e.g. a raw board): store them bit-packed in the
+    # replay buffer, 8 inputs per byte. For 220-cell boards with 40 candidates
+    # per transition that's ~1.2 KB instead of ~35 KB (float32), so 100k
+    # transitions take ~120 MB of memory instead of ~3.5 GB.
+    binary_inputs: bool = False
     batch_size: int = 128
     buffer_capacity: int = 100_000  # replay buffer size, in transitions
     learning_starts: int = 1_000  # don't update until the buffer holds this many
@@ -207,12 +212,15 @@ class AfterstateTDLearner:
         # Adam: the optimizer. It turns gradients into weight changes, with a
         # per-weight step size that adapts to how noisy that weight's gradient is.
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg.lr)
+        self.n_features = n_features
+        # What one stored input looks like: float32 values, or packed bits.
+        width, dtype = ((n_features + 7) // 8, np.uint8) if cfg.binary_inputs else (n_features, np.float32)
         self.buffer = ReplayBuffer(
             cfg.buffer_capacity,
             {
-                "x": ((n_features,), np.float32),
+                "x": ((width,), dtype),
                 "terminated": ((), np.bool_),
-                "next_x": ((max_candidates, n_features), np.float32),
+                "next_x": ((max_candidates, width), dtype),
                 "next_r": ((max_candidates,), np.float32),
                 "next_mask": ((max_candidates,), np.bool_),
             },
@@ -263,7 +271,19 @@ class AfterstateTDLearner:
             k = len(cands.actions)
             next_x[:k], next_r[:k], next_mask[:k] = cands.features, cands.rewards, True
             self._cached = (next_info, cands)
-        self.buffer.add(x=x, terminated=terminated, next_x=next_x, next_r=next_r, next_mask=next_mask)
+        self.buffer.add(x=self._pack(x), terminated=terminated, next_x=self._pack(next_x), next_r=next_r,
+                        next_mask=next_mask)
+
+    # Bit-packing (only when cfg.binary_inputs): np.packbits turns every 8
+    # zeros/ones along the last axis into one byte; unpackbits reverses it
+    # (count= drops the padding bits when n_features isn't a multiple of 8).
+    def _pack(self, x: np.ndarray) -> np.ndarray:
+        return np.packbits(x > 0.5, axis=-1) if self.cfg.binary_inputs else x
+
+    def _unpack(self, x: np.ndarray) -> np.ndarray:
+        if not self.cfg.binary_inputs:
+            return x
+        return np.unpackbits(x, axis=-1, count=self.n_features).astype(np.float32)
 
     # ------------------------------------------------------------------
     def td_targets(self, batch: dict[str, np.ndarray]) -> torch.Tensor:
@@ -299,6 +319,7 @@ class AfterstateTDLearner:
         if len(self.buffer) < max(cfg.learning_starts, cfg.batch_size):
             return None
         batch = self.buffer.sample(cfg.batch_size)
+        batch["x"], batch["next_x"] = self._unpack(batch["x"]), self._unpack(batch["next_x"])
         target = self.td_targets(batch)
         pred = self.net(torch.from_numpy(batch["x"]))
         loss = F.huber_loss(pred, target, delta=cfg.huber_delta)

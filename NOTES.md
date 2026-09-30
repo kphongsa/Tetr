@@ -329,3 +329,20 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   the network peaked mid-training and then got worse, so the last
   checkpoint would have lost to the tuned heuristic while the selected one
   beat it.
+
+## Step 3e: raw-board input
+- **Raw input vs hand-made features**: instead of 4 numbers we computed
+  (height, holes, ...), the network gets the 220 cells of the board and must
+  discover useful concepts itself. That's "representation learning": the
+  first layer's outputs become the network's own home-made features.
+- **Convolutional neural network (CNN)**: a network that slides small filters
+  (e.g. 3×3 cells) over a grid, so it knows which cells are neighbours and
+  can reuse one "hole detector" everywhere on the board. The standard choice
+  for images and boards, but ~50× slower than an MLP on this CPU for our
+  batch sizes, so step 3e starts with an MLP.
+- **MLP on a flattened board**: treats the 220 cells as an unordered list; it
+  doesn't know cell 12 sits under cell 2 and must learn every such relation
+  from experience. Cheaper to run, harder to learn with.
+- **Bit-packing**: storing 8 zero/one values in one byte (np.packbits). Our
+  replay buffer holds 40 candidate boards per move; packed, 100k moves need
+  ~120 MB instead of ~3.5 GB.

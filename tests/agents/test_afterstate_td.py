@@ -125,3 +125,15 @@ def test_learning_rate_decays_linearly_then_stays():
     const = AfterstateTDLearner(agent, dataclasses.replace(cfg, lr_end=None), 4, 3)
     const.updates = 10_000
     assert const.current_lr() == 1e-3
+
+
+def test_binary_inputs_are_packed_and_restored_exactly():
+    # 13 inputs: not a multiple of 8, so unpacking must drop the padding bits.
+    cfg = TDConfig(binary_inputs=True, buffer_capacity=10)
+    agent = AfterstateValueAgent(make_value_net(13, cfg.hidden, 0), None, np.random.default_rng(0))
+    learner = AfterstateTDLearner(agent, cfg, n_features=13, max_candidates=3)
+    x = (np.random.default_rng(1).random((3, 13)) < 0.5).astype(np.float32)
+    packed = learner._pack(x)
+    assert packed.dtype == np.uint8 and packed.shape == (3, 2)  # 13 bits -> 2 bytes
+    assert np.array_equal(learner._unpack(packed), x)
+    assert learner.buffer.data["next_x"].dtype == np.uint8

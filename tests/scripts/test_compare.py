@@ -40,3 +40,10 @@ def test_lr_decay_config_is_valid():
     cfg = json.loads((ROOT / "configs" / "lr_decay.json").read_text())
     _, learner, loop = build(cfg)
     assert learner.cfg.lr_end < learner.cfg.lr and loop.keep_eval_checkpoints
+
+
+def test_raw_config_is_valid():
+    cfg = json.loads((ROOT / "configs" / "raw.json").read_text())
+    _, learner, _ = build(cfg)
+    assert learner.net.net[0].in_features == 220 and learner.cfg.binary_inputs
+    assert learner.buffer.nbytes() < 300e6  # bit-packing keeps 100k transitions small

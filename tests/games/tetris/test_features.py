@@ -155,3 +155,22 @@ def test_candidate_features_are_scaled():
     c = candidates(obs, info)
     raw = np.array([board_features(g, 0) for g in c.grids])
     assert np.allclose(c.features, raw / FEATURE_SCALE)
+
+
+def test_raw_candidates_are_the_afterstate_boards():
+    from games.tetris.env import TetrisEnv
+    from games.tetris.features import RAW_INPUTS, candidates, raw_candidates
+
+    env = TetrisEnv()
+    obs, info = env.reset(seed=5)
+    for _ in range(30):  # a few real positions, not just the empty board
+        raw, feat = raw_candidates(obs, info), candidates(obs, info)
+        assert raw.actions == feat.actions
+        assert np.array_equal(raw.rewards, feat.rewards)
+        assert raw.features.shape == (len(raw.actions), RAW_INPUTS) and raw.features.dtype == np.float32
+        assert set(np.unique(raw.features)) <= {0.0, 1.0}
+        for row, grid in zip(raw.features, raw.grids):
+            assert np.array_equal(row.reshape(grid.shape), (grid != 0).astype(np.float32))
+        obs, _, terminated, _, info = env.step(feat.actions[0])
+        if terminated:
+            break

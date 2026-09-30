@@ -1,0 +1,41 @@
+{
+  "name": "raw",
+  "inputs": "raw",
+  "torch_threads": 4,
+  "loop": {
+    "total_steps": 200000,
+    "max_episode_steps": 2000,
+    "train_seed_start": 1000000,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.001,
+    "epsilon_decay_steps": 30000,
+    "print_every_episodes": 25,
+    "checkpoint_every_episodes": 25,
+    "eval_every_episodes": 40,
+    "eval_games": 50,
+    "replays_per_eval": 2,
+    "best_metric": "score",
+    "keep_eval_checkpoints": true
+  },
+  "learner": {
+    "hidden": [
+      128,
+      64
+    ],
+    "net_seed": 0,
+    "rng_seed": 0,
+    "gamma": 0.99,
+    "lr": 0.001,
+    "batch_size": 128,
+    "buffer_capacity": 100000,
+    "learning_starts": 2000,
+    "target_update_every": 1000,
+    "huber_delta": 1.0,
+    "reward_scale": 0.01,
+    "survival_bonus": 0.1,
+    "game_over_value": -2.0,
+    "lr_end": 0.0001,
+    "lr_decay_steps": 150000,
+    "binary_inputs": true
+  }
+}

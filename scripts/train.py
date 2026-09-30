@@ -45,7 +45,7 @@ from core.checkpoint import load_checkpoint
 from core.evaluate import evaluate, git_commit
 from core.train import EvalSpec, LoopConfig, format_config, load_config, make_run_dir, train
 from games.tetris.env import TetrisEnv
-from games.tetris.features import FEATURE_NAMES, candidates
+from games.tetris.features import FEATURE_NAMES, RAW_INPUTS, candidates, raw_candidates
 from scripts.evaluate import EVAL_FIRST_SEED, EVAL_GAMES
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,6 +56,10 @@ SELECTION_REFERENCE = ROOT / "results" / "selection_reference.json"
 SELECTION_FIRST_SEED = 10_100
 SELECTION_MAX_GAMES = 100  # seeds 10100..10199 are reserved for this
 INFO_KEYS = ("lines", "score", "pieces")
+# config["inputs"]: what the network sees for each placement -> (candidates function, input size).
+#   "features": the 4 hand-picked board features (step 3a-3d)
+#   "raw":      the 22 x 10 afterstate board itself (step 3e)
+INPUTS = {"features": (candidates, len(FEATURE_NAMES)), "raw": (raw_candidates, RAW_INPUTS)}
 
 
 def build(config: dict) -> tuple[TetrisEnv, AfterstateTDLearner, LoopConfig]:
@@ -64,6 +68,12 @@ def build(config: dict) -> tuple[TetrisEnv, AfterstateTDLearner, LoopConfig]:
     td_kwargs = dict(config["learner"])
     td_kwargs["hidden"] = tuple(td_kwargs.get("hidden", TDConfig.hidden))  # JSON lists -> tuple
     td = TDConfig(**td_kwargs)
+    inputs = config.get("inputs", "features")  # old configs have no key: they used features
+    if inputs not in INPUTS:
+        raise ValueError(f"inputs must be one of {sorted(INPUTS)}, got {inputs!r}")
+    candidates_fn, n_inputs = INPUTS[inputs]
+    if inputs == "raw" and not td.binary_inputs:
+        raise ValueError('inputs "raw" needs learner.binary_inputs = true (else the replay buffer needs ~3.5 GB)')
 
     # Training must never play the evaluation games (that would be training on the test).
     last_reserved = SELECTION_FIRST_SEED + SELECTION_MAX_GAMES - 1
@@ -75,10 +85,10 @@ def build(config: dict) -> tuple[TetrisEnv, AfterstateTDLearner, LoopConfig]:
 
     torch.set_num_threads(config.get("torch_threads", 4))
     env = TetrisEnv()  # the loop's StepLimit applies max_episode_steps
-    net = make_value_net(len(FEATURE_NAMES), td.hidden, seed=td.net_seed)
-    agent = AfterstateValueAgent(net, candidates, np.random.default_rng(td.rng_seed),
+    net = make_value_net(n_inputs, td.hidden, seed=td.net_seed)
+    agent = AfterstateValueAgent(net, candidates_fn, np.random.default_rng(td.rng_seed),
                                  gamma=td.gamma, reward_scale=td.reward_scale)
-    learner = AfterstateTDLearner(agent, td, n_features=len(FEATURE_NAMES), max_candidates=env.num_actions)
+    learner = AfterstateTDLearner(agent, td, n_features=n_inputs, max_candidates=env.num_actions)
     return env, learner, loop
 
 
@@ -89,6 +99,7 @@ def full_config(config: dict) -> dict:
     out["loop"] = asdict(loop)
     out["learner"] = asdict(learner.cfg)
     out.setdefault("torch_threads", 4)
+    out.setdefault("inputs", "features")
     return out
 
 
