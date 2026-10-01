@@ -6,3 +6,4 @@ mypy>=1.10
 torch>=2.2
 tensorboard>=2.16
 matplotlib>=3.8  # learning-curve PNG in scripts/run_status.py
+pillow>=10.1  # GIF frames in scripts/make_gif.py (load_default(size) needs 10.1)

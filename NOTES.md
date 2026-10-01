@@ -367,3 +367,20 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **gzip**: a standard compression format. Web servers (GitHub Pages included)
   compress files on the fly; our frame files shrink ~15x (1.26 MB -> 83 KB for a
   3,000-piece game) because board strings repeat a lot.
+
+## Step 4b: GIFs and videos
+- **Pillow (PIL)**: the standard Python image library. We draw each frame as
+  coloured squares plus text, then stitch the pictures into a GIF or video.
+- **GIF palette**: a GIF frame can hold only 256 colours. We use one fixed
+  palette (our piece colours + a gray ramp) for every frame, so colours don't
+  flicker, and no **dithering** (speckling pixels to fake in-between colours),
+  so blocks stay flat and the file stays small.
+- **Frame rate (fps)**: pictures per second. Here 1 picture ≈ 1 piece. Browsers
+  play GIF frames faster than ~50 fps slowly, so long games should use
+  `--every N` (show every Nth piece) or a video.
+- **MP4 / H.264 / ffmpeg**: MP4 is a video file, H.264 the standard way of
+  compressing video inside it, and ffmpeg the free command-line tool that
+  encodes it. A video only stores what changes between pictures, so a whole
+  3,000-piece game is ~1.5 MB, much smaller than the same GIF.
+- **yuv420p**: the colour format every video player supports. It stores colour
+  at half resolution, which is why the picture's width and height must be even.
