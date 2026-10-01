@@ -9,4 +9,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 # importlib mode lets tests in different folders share file names
 # (e.g. tests/games/tetris/test_env.py and a future tests/games/sts/test_env.py).
-addopts = "--import-mode=importlib"
+# -m "not slow": skip tests marked slow by default; run them with `pytest -m slow`
+# (a later -m on the command line overrides this one).
+addopts = '--import-mode=importlib -m "not slow"'
+markers = ["slow: long-running checks (e.g. re-simulating every saved replay)"]

@@ -346,3 +346,24 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **Bit-packing**: storing 8 zero/one values in one byte (np.packbits). Our
   replay buffer holds 40 candidate boards per move; packed, 100k moves need
   ~120 MB instead of ~3.5 GB.
+
+## Step 4a: replays and frames
+- **Re-simulation**: replaying a game by running the real engine again from the
+  same seed with the same actions, instead of storing every board. Works only
+  because the game is deterministic (same seed + same actions = same game).
+- **Replay verification**: re-simulating a saved replay and checking it ends with
+  the recorded score/lines/pieces. If the engine's rules or random-piece code
+  ever change, old replays would silently turn into different games; this
+  catches it. Each replay stores the git commit that recorded it, for diffing.
+- **Frame**: a snapshot for drawing, here the board after one piece plus a few
+  numbers (score, height, holes, ...). Python exports frames; viewers only
+  draw them, so the rules live in exactly one place (the Python engine).
+- **Single source of truth**: one authoritative implementation of something
+  (the rules). Copies (e.g. a JavaScript Tetris for the web page) drift apart
+  over time and then the viewer shows a game that never happened.
+- **ANSI escape codes**: special character sequences (starting with ESC, `\x1b`)
+  that tell a terminal to move the cursor or clear the screen. Redrawing at the
+  top-left instead of printing new lines is what makes terminal animation work.
+- **gzip**: a standard compression format. Web servers (GitHub Pages included)
+  compress files on the fly; our frame files shrink ~15x (1.26 MB -> 83 KB for a
+  3,000-piece game) because board strings repeat a lot.
