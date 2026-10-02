@@ -5,6 +5,7 @@ Run from the repo root:
     python -m scripts.build_site --runs lr_decay raw   # only these runs
     python -m scripts.build_site --per-run 30          # more training steps per run
     python -m scripts.build_site --all                 # every replay (~46 MB of JSON!)
+    python -m scripts.build_site --thoughts 0          # without the "AI's options" overlay
 
 Then serve the folder and open the viewer:
     python -m http.server 8000 --directory site       ->  http://localhost:8000
@@ -20,6 +21,11 @@ Output:
     site/data/<run>/<replay>.json    one frames file per game (format:
                                      games/tetris/frames.py)
 site/data/ is rebuilt from scratch every time (it's generated, git-ignored).
+
+Thoughts (step 4e): for every game whose training step still has a
+checkpoint, the network's top --thoughts options per piece are added
+(scripts/thoughts.py), for the viewer's "Show AI's options" overlay.
+Adds ~60% to the file size and ~10 s per 1,000 pieces.
 """
 
 from __future__ import annotations
@@ -32,6 +38,7 @@ from pathlib import Path
 
 from core.replay import load_replay
 from scripts.export_frames import tetris_frames
+from scripts.thoughts import add_thoughts, checkpoint_for_step
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNS = ["lr_decay", "full", "raw"]
@@ -67,8 +74,13 @@ def pick_steps(steps: list[int], per_run: int, must: list[int]) -> list[int]:
     return sorted(chosen)
 
 
-def build(runs_root: Path, runs: list[str], out: Path, per_run: int = 10, everything: bool = False) -> list[dict]:
-    """Export the selected replays of `runs` into `out`; returns the index entries."""
+def build(runs_root: Path, runs: list[str], out: Path, per_run: int = 10, everything: bool = False,
+          thoughts: int = 0) -> list[dict]:
+    """Export the selected replays of `runs` into `out`; returns the index entries.
+
+    thoughts > 0: add the agent's top-`thoughts` options per piece wherever
+    the checkpoint from the replay's training step exists.
+    """
     if out.exists():
         shutil.rmtree(out)
     entries = []
@@ -87,6 +99,11 @@ def build(runs_root: Path, runs: list[str], out: Path, per_run: int = 10, everyt
             if meta["step"] not in keep:
                 continue
             doc = tetris_frames(replay)  # re-simulates AND verifies; raises on mismatch
+            checkpoint = checkpoint_for_step(run_dir, meta["step"]) if thoughts else None
+            if checkpoint is not None:
+                from scripts.train import load_eval_agent  # imports torch: only when needed
+                agent, _ = load_eval_agent(checkpoint)
+                add_thoughts(doc, replay, agent, checkpoint, thoughts)
             rel = Path(run) / path.name
             (out / run).mkdir(parents=True, exist_ok=True)
             (out / rel).write_text(json.dumps(doc, separators=(",", ":")))
@@ -100,9 +117,12 @@ def build(runs_root: Path, runs: list[str], out: Path, per_run: int = 10, everyt
                 "lines": meta["lines"],
                 "score": meta["score"],
                 "best": meta["step"] == best,
+                "thoughts": checkpoint is not None,
             })
-        print(f"{run}: {sum(e['run'] == run for e in entries)} games from {len(keep)} training steps"
-              + (f" (best.pt = step {best:,})" if best else ""))
+        mine = [e for e in entries if e["run"] == run]
+        print(f"{run}: {len(mine)} games from {len(keep)} training steps"
+              + (f" (best.pt = step {best:,})" if best else "")
+              + (f", {sum(e['thoughts'] for e in mine)} with the AI's options" if thoughts else ""))
 
     entries.sort(key=lambda e: (e["run"], e["step"], e["seed"]))
     out.mkdir(parents=True, exist_ok=True)
@@ -116,8 +136,9 @@ def main() -> None:
     parser.add_argument("--per-run", type=int, default=10)
     parser.add_argument("--all", action="store_true", help="every replay of the chosen runs")
     parser.add_argument("--out", type=Path, default=ROOT / "site" / "data")
+    parser.add_argument("--thoughts", type=int, default=4, help="top-k options per piece (0 = off)")
     args = parser.parse_args()
-    entries = build(ROOT / "runs", args.runs, args.out, args.per_run, args.all)
+    entries = build(ROOT / "runs", args.runs, args.out, args.per_run, args.all, args.thoughts)
     total = sum(f.stat().st_size for f in args.out.rglob("*.json"))
     print(f"{len(entries)} games -> {args.out} ({total / 1e6:.1f} MB)")
 

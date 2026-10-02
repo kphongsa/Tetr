@@ -114,3 +114,14 @@ kbd {
   color: var(--text);
   font-size: 0.85em;
 }
+
+.toggle { color: var(--dim); display: flex; align-items: center; gap: 6px; margin-left: 8px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); }
+
+/* The AI's ranked options under the stats. */
+.options { margin-top: 6px; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.options:empty { display: none; }
+.options .head { color: var(--dim); margin-bottom: 2px; }
+.options ol { margin: 0; padding-left: 1.6em; }
+.options li.chosen { color: var(--accent); font-weight: 600; }
+.options .gap { color: var(--dim); }

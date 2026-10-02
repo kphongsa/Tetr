@@ -76,3 +76,17 @@ def test_works_with_evaluation_harness():
                    info_keys=("lines", "score", "pieces"))
     s = res["summary"]
     assert s["games"] == 3 and s["steps"]["max"] <= 50
+
+
+def test_ranked_choices_first_is_what_it_plays():
+    agent = make_agent()
+    env = TetrisEnv()
+    obs, info = env.reset(seed=4)
+    for _ in range(20):
+        ranked = agent.ranked_choices(obs, info, 5)
+        assert len(ranked) == min(5, len(info["legal_actions"]))
+        assert ranked[0][0] == agent.act(obs, info)
+        assert [q for _, q in ranked] == sorted((q for _, q in ranked), reverse=True)
+        obs, _, terminated, _, info = env.step(ranked[0][0])
+        if terminated:
+            break

@@ -426,3 +426,19 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
 - **Log scale**: an axis where each step multiplies instead of adds
   (1k, 10k, 100k equally spaced). Used for training steps because the
   evaluations are dense early and sparse late.
+
+## Step 4e: "what was the AI thinking"
+- **Q value (as shown in the viewer)**: the number the agent maximizes when
+  choosing a placement: 0.01 × points it scores now + 0.99 × the network's
+  estimate of what the resulting board is worth. The agent always plays the
+  highest one. Only differences between options matter; the overall level
+  rises as training goes on (≈3.6 at step 14k, ≈28 at the best checkpoint)
+  because a better player expects to survive, and earn, for longer.
+- **Ghost piece**: a see-through outline showing where a piece could go. Here,
+  the network's top few placements for the next piece, numbered by rank.
+- **Interpretability**: looking inside a model to understand why it does what
+  it does. Showing the ranked options is a simple version: it reveals when a
+  choice was a near coin flip (gap ≈ 0) versus a strong preference.
+- **Faithfulness check**: we only show "thoughts" if the agent's #1 option is
+  exactly the move recorded in the replay. Otherwise the overlay would explain
+  a game the agent didn't play.

@@ -39,6 +39,7 @@ const state = {
   speed: DEFAULT_SPEED,
   carry: 0,           // fraction of the next piece already "elapsed" during playback
   lastTime: null,     // timestamp of the previous animation frame
+  showThoughts: false,// draw the AI's top options as ghost pieces (step 4e)
 };
 const cache = new Map(); // file name -> loaded document, so switching back is instant
 
@@ -61,6 +62,8 @@ async function loadGame(entry) {
     // Precompute the piece numbers where lines were cleared, once, so
     // "jump to next clear" doesn't scan thousands of frames each time.
     doc.clears = doc.frames.filter((f) => f.cleared_rows.length > 0).map((f) => f.n);
+    // Only games whose training checkpoint was kept have the AI's options.
+    doc.hasOptions = doc.frames.some((f) => f.options);
     doc.entry = entry;
     cache.set(entry.file, doc);
   }
@@ -176,6 +179,7 @@ function drawPanel(panel, game, n) {
                 frame.cleared_rows.length > 0 && state.carry < 0.5;
   drawBoard(panel.querySelector("canvas"), game, frame, flash);
   drawStats(panel.querySelector(".stats"), frame, isCurrent);
+  drawOptions(panel.querySelector(".options"), game, frame);
 }
 
 function drawBoard(canvas, game, frame, flash) {
@@ -214,11 +218,14 @@ function drawBoard(canvas, game, frame, flash) {
   // Outline the piece that was just placed, so you can follow the decision.
   // Skipped when rows cleared: the cells are in "before clear" coordinates
   // and everything above the cleared rows has since moved down.
-  if (!flash && frame.cells.length && frame.cleared_rows.length === 0) {
+  const ghosts = state.showThoughts && !flash && frame.options;
+  if (!ghosts && !flash && frame.cells.length && frame.cleared_rows.length === 0) {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
     for (const [r, c] of frame.cells) ctx.strokeRect(c * CELL + 1, r * CELL + 1, CELL - 3, CELL - 3);
   }
+
+  if (ghosts) drawGhosts(ctx, frame.options);
 
   if (frame.game_over) {
     const y = (h.height * CELL) / 2;
@@ -230,6 +237,61 @@ function drawBoard(canvas, game, frame, flash) {
     ctx.textBaseline = "middle";
     ctx.fillText("GAME OVER", canvas.width / 2, y);
   }
+}
+
+// The AI's top options for the piece about to be placed, as see-through
+// "ghost" pieces with their rank. Drawn worst-first so #1 ends up on top.
+function drawGhosts(ctx, options) {
+  for (let i = options.length - 1; i >= 0; i--) {
+    const cells = options[i].cells;
+    const chosen = i === 0;
+    ctx.fillStyle = chosen ? "rgba(49, 199, 239, 0.30)" : "rgba(255, 255, 255, 0.13)";
+    ctx.strokeStyle = chosen ? "#31c7ef" : "rgba(255, 255, 255, 0.55)";
+    ctx.lineWidth = chosen ? 3 : 1.5;
+    ctx.setLineDash(chosen ? [] : [4, 3]); // dashed outline for the runners-up
+    for (const [r, c] of cells) {
+      ctx.fillRect(c * CELL, r * CELL, CELL - 1, CELL - 1);
+      ctx.strokeRect(c * CELL + 1.5, r * CELL + 1.5, CELL - 4, CELL - 4);
+    }
+    ctx.setLineDash([]);
+    // Rank number in the middle of the piece (average of its cell centres).
+    const rMid = cells.reduce((sum, [r]) => sum + r, 0) / cells.length;
+    const cMid = cells.reduce((sum, [, c]) => sum + c, 0) / cells.length;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(i + 1), (cMid + 0.5) * CELL, (rMid + 0.5) * CELL);
+  }
+}
+
+// The ranked list under the stats: each option's rating and how far behind #1 it is.
+function drawOptions(box, game, frame) {
+  if (!state.showThoughts) {
+    box.innerHTML = "";
+  } else if (!game.hasOptions) {
+    box.innerHTML = `<div class="head">No AI options for this game (its checkpoint wasn't kept).</div>`;
+  } else if (!frame.options) {
+    box.innerHTML = ""; // the last frame: no piece left to place
+  } else {
+    const piece = game.header.piece_names[frame.next];
+    const best = frame.options[0].v;
+    const items = frame.options.map((o, i) => {
+      // "−" is a real minus sign (a hyphen looks too short next to digits).
+      // Values are stored rounded to 3 decimals, so a smaller gap is a tie.
+      const d = best - o.v;
+      const gap = i === 0 ? "played" : d < 0.0005 ? "tie" : `−${d.toFixed(3)}`;
+      return `<li class="${i === 0 ? "chosen" : ""}">${o.v.toFixed(2)} <span class="gap">(${gap})</span></li>`;
+    });
+    box.innerHTML = `<div class="head">AI's top options for the next piece (${piece}):</div><ol>${items.join("")}</ol>`;
+  }
+}
+
+function setThoughts(on) {
+  state.showThoughts = on;
+  $("show-thoughts").checked = on;
+  saveToURL();
+  draw();
 }
 
 function drawStats(table, frame, isCurrent) {
@@ -302,6 +364,7 @@ function saveToURL() {
   if (state.games[0]) p.set("a", state.games[0].entry.id);
   if (state.games[1]) p.set("b", state.games[1].entry.id);
   if (state.n) p.set("n", state.n);
+  if (state.showThoughts) p.set("t", "1");
   // replaceState changes the address bar without reloading or adding a
   // "back" history entry for every piece.
   history.replaceState(null, "", "#" + p.toString());
@@ -309,7 +372,7 @@ function saveToURL() {
 
 function readURL() {
   const p = new URLSearchParams(location.hash.slice(1));
-  return { a: p.get("a"), b: p.get("b"), n: Number(p.get("n") || 0) };
+  return { a: p.get("a"), b: p.get("b"), n: Number(p.get("n") || 0), t: p.get("t") === "1" };
 }
 
 // ---------------------------------------------------------------------------
@@ -338,6 +401,7 @@ function wireControls() {
   speed.value = String(state.speed);
   speed.addEventListener("change", () => { state.speed = Number(speed.value); });
 
+  $("show-thoughts").addEventListener("change", (ev) => setThoughts(ev.target.checked));
   $("pick-a").addEventListener("change", (ev) => choose(0, ev.target.value));
   $("pick-b").addEventListener("change", (ev) => choose(1, ev.target.value));
 
@@ -358,6 +422,8 @@ function wireControls() {
       "+": () => changeSpeed(+1),
       "=": () => changeSpeed(+1), // same key as + without Shift
       "-": () => changeSpeed(-1),
+      t: () => setThoughts(!state.showThoughts),
+      T: () => setThoughts(!state.showThoughts),
     };
     const action = actions[ev.key];
     if (!action) return;
@@ -392,6 +458,8 @@ async function main() {
   // Start from the URL if it names games, else the highest-scoring "best
   // checkpoint" game (sort with a comparison function: highest score first).
   const url = readURL();
+  state.showThoughts = url.t;
+  $("show-thoughts").checked = url.t;
   const bests = state.index.filter((e) => e.best).sort((x, y) => y.score - x.score);
   const first = bests[0] || state.index[0];
   const known = (id) => state.index.some((e) => e.id === id);

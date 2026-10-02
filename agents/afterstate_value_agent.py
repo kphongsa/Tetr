@@ -131,6 +131,19 @@ class AfterstateValueAgent:
         idx, cands = self.choose(obs, info)
         return cands.actions[idx]
 
+    def ranked_choices(self, obs, info, k: int) -> list[tuple[int, float]]:
+        """The k best placements as (action, Q), best first: "what was it thinking".
+
+        Q is the number the greedy agent maximizes. A stable sort keeps
+        exact ties in action-id order, so the first entry is always what
+        choose() would pick with epsilon = 0 (which also takes the lowest id).
+        Used by the step 4e viewer overlay; doesn't touch the rng.
+        """
+        cands = self.candidates_fn(obs, info)
+        q = self.q_values(cands)
+        order = np.argsort(-q, kind="stable")[:k]
+        return [(int(cands.actions[i]), float(q[i])) for i in order]
+
 
 # ----------------------------------------------------------------------
 # Learning (step 3b)

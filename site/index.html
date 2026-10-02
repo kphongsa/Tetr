@@ -52,11 +52,14 @@
            height attributes are its drawing resolution; CSS scales it on screen. -->
       <canvas width="240" height="528"></canvas>
       <table class="stats"></table>
+      <!-- The AI's ranked options for the next piece (filled in when "Show AI's options" is on). -->
+      <div class="options"></div>
     </section>
     <section class="panel" id="panel-b" hidden>
       <h2 class="panel-title"></h2>
       <canvas width="240" height="528"></canvas>
       <table class="stats"></table>
+      <div class="options"></div>
     </section>
   </main>
 
@@ -73,6 +76,10 @@
       <label class="speed">Speed
         <select id="speed" title="Pieces per second (- and + keys)"></select>
       </label>
+      <!-- A checkbox; viewer.js reads .checked to decide whether to draw the ghosts. -->
+      <label class="toggle" title="Show the network's top options for the next piece (T)">
+        <input type="checkbox" id="show-thoughts"> Show AI's options
+      </label>
     </div>
     <div class="timeline">
       <!-- A range input is a slider; dragging it jumps to that piece. -->
@@ -87,11 +94,17 @@
       <li><kbd>Space</kbd> play / pause &nbsp; <kbd>&larr;</kbd> <kbd>&rarr;</kbd> one piece
         (<kbd>Shift</kbd>: 10 pieces) &nbsp; <kbd>Home</kbd> / <kbd>End</kbd> start / end</li>
       <li><kbd>N</kbd> / <kbd>P</kbd> next / previous line clear &nbsp;
-        <kbd>+</kbd> / <kbd>-</kbd> faster / slower</li>
+        <kbd>+</kbd> / <kbd>-</kbd> faster / slower &nbsp; <kbd>T</kbd> show / hide the AI's options</li>
       <li><b>Height</b>: tallest column (20 = top of the visible board; 21&ndash;22 = the two
         dimmed spawn rows, about to lose). <b>Holes</b>: empty squares with a block above
         them. <b>Bumpiness</b>: how uneven the surface is (sum of height differences
         between neighbouring columns).</li>
+      <li><b>AI's options</b>: for the piece about to be placed, the network's top choices
+        as faint numbered ghosts (1 = what it played, thick outline). The number next to
+        each is its rating: 0.01 &times; points scored + 0.99 &times; the network's estimate
+        of the board it leaves. Only the differences matter: a gap of 0.01 is a coin flip,
+        a gap of 1 is a clear preference. Available for games whose training checkpoint
+        was kept.</li>
       <li>White rows = the moment before they clear (shown at speeds up to 20 pieces/s).
         The outlined piece is the one just placed.</li>
     </ul>
