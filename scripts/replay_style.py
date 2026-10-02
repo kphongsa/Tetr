@@ -5,10 +5,12 @@ Run from the repo root:
     python -m scripts.replay_style runs/full --seed 10101
     python -m scripts.replay_style runs/full --max-pieces 2000
 
-Each replay is re-simulated (seed + actions, CLAUDE.md rule 4), and after
-every piece we measure the board. Because every evaluation saves the SAME
-seeds, the rows are the same piece sequence played at different stages of
-training, so differences are play style, not luck.
+Each replay is re-simulated (seed + actions, CLAUDE.md rule 4) and measured
+after every piece with games/tetris/style.py (metric definitions there).
+Because every evaluation saves the SAME seeds, the rows are the same piece
+sequence played at different stages of training, so differences are play
+style, not luck. For plots over training (and more games per step), see
+scripts/style_report.py.
 
 Columns
     step        training step when the replay was recorded
@@ -17,8 +19,8 @@ Columns
                 board, 21-22 = the hidden spawn rows, i.e. about to lose)
     holes       average number of holes (empty cells with a block above them)
     bump        average bumpiness (sum of height differences between neighbour columns)
-    1/2/3/4     share of line-clear events that cleared 1, 2, 3 or 4 lines at once
-    pts/line    points per line: 100 = only singles, 200 = only tetrises
+    1/2/3/4     share of cleared LINES that came from singles / doubles / triples / tetrises
+    pcs/clear   pieces placed per line-clear event
 
 --max-pieces: only look at the first N pieces of each game, so a game that
 lasted 10,000 pieces and one that lasted 200 are compared over the same stretch.
@@ -29,54 +31,36 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
-
 from core.replay import load_replay
 from games.tetris.env import TetrisEnv
-from games.tetris.features import board_features, column_heights
+from games.tetris.style import StyleTracker
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def style(replay: dict, max_pieces: int | None = None) -> dict:
-    """Play the replay back and summarize the board after every piece."""
+    """Play the replay back and return its style metrics, plus its training step."""
     env = TetrisEnv()
-    obs, info = env.reset(seed=replay["seed"])
-    heights, holes, bumps = [], [], []
-    clears = np.zeros(5, dtype=int)  # clears[k] = how many placements cleared k lines
+    env.reset(seed=replay["seed"])
+    tracker = StyleTracker()
     actions = replay["actions"][:max_pieces] if max_pieces else replay["actions"]
     for action in actions:
         obs, _, terminated, truncated, info = env.step(action)
-        grid = obs["board"]
-        h = column_heights(grid)
-        feats = board_features(grid, 0)
-        heights.append(int(h.max()))
-        holes.append(feats[2])
-        bumps.append(feats[3])
-        clears[info["lines_cleared"]] += 1
+        tracker.add(obs["board"], info["lines_cleared"])
         if terminated or truncated:
             break
-    events = clears[1:].sum()
-    lines = int((np.arange(5) * clears).sum())
-    return {
-        "step": replay["metadata"].get("step"),
-        "pieces": len(heights),
-        "avg_height": float(np.mean(heights)),
-        "max_height": int(np.max(heights)),
-        "holes": float(np.mean(holes)),
-        "bumpiness": float(np.mean(bumps)),
-        "clear_shares": (clears[1:] / events).tolist() if events else [0.0] * 4,
-        "points_per_line": float(np.dot(clears[1:], [100, 300, 500, 800]) / lines) if lines else 0.0,
-    }
+    return {"step": replay["metadata"].get("step"), **tracker.metrics()}
 
 
 def format_table(rows: list[dict]) -> str:
     out = [f"{'step':>9} {'pieces':>7} {'avg h':>6} {'max h':>6} {'holes':>6} {'bump':>6}"
-           f" {'1':>5} {'2':>5} {'3':>5} {'4':>5} {'pts/line':>8}"]
+           f" {'1':>5} {'2':>5} {'3':>5} {'4':>5} {'pcs/clear':>9}"]
     for r in rows:
-        shares = " ".join(f"{100 * s:4.0f}%" for s in r["clear_shares"])
-        out.append(f"{r['step']:>9,} {r['pieces']:>7,} {r['avg_height']:6.1f} {r['max_height']:6d} "
-                   f"{r['holes']:6.2f} {r['bumpiness']:6.1f} {shares} {r['points_per_line']:8.0f}")
+        shares = " ".join(f"{100 * r[k]:4.0f}%" for k in
+                          ("share_singles", "share_doubles", "share_triples", "share_tetrises"))
+        ppc = f"{r['pieces_per_clear']:9.1f}" if r["pieces_per_clear"] is not None else f"{'-':>9}"
+        out.append(f"{r['step']:>9,} {r['pieces']:>7,} {r['avg_stack_height']:6.1f} {r['max_stack_height']:6d} "
+                   f"{r['avg_holes']:6.2f} {r['avg_bumpiness']:6.1f} {shares} {ppc}")
     return "\n".join(out)
 
 

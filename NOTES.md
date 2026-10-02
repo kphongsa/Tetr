@@ -404,3 +404,25 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   the computer is.
 - **URL hash**: the part of an address after `#`. The viewer stores the games
   and piece number there, so a link reopens exactly that moment.
+
+## Step 4d: play style over training
+- **Play style metrics**: numbers that describe HOW a game was played rather
+  than how well: average stack height, holes, bumpiness, which clear sizes the
+  lines came from, pieces per line clear. Two agents with the same score can
+  have very different styles.
+- **Behavior descriptor**: the same idea used for search. In MAP-Elites (step 5)
+  each agent gets coordinates from a few style metrics (e.g. "share of
+  tetrises" × "average stack height"), and the archive keeps the best agent in
+  every cell of that grid, so you end up with high scorers of many styles.
+- **Sample size / noise**: an average over 2 games can swing a lot just from
+  which pieces came. Averages over more games are steadier; the spread of the
+  individual dots in the style plots shows how much a single game varies.
+- **Fresh games from checkpoints**: because a checkpoint per evaluation was
+  kept, we can replay the agent from any point in training on as many new
+  seeds as we like, instead of being stuck with the 2 games saved at the time.
+- **Small multiples**: many small charts with the same x axis, one per metric,
+  instead of one crowded chart. Easier to read, and each chart keeps its own
+  sensible y scale.
+- **Log scale**: an axis where each step multiplies instead of adds
+  (1k, 10k, 100k equally spaced). Used for training steps because the
+  evaluations are dense early and sparse late.
