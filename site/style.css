@@ -1,0 +1,116 @@
+/* Tetris replay viewer styles. Dark theme to match the GIFs.
+   Colours are defined once as "custom properties" (CSS variables) on :root
+   and used everywhere as var(--name), so they're easy to change. */
+:root {
+  --bg: #0e0f13;
+  --panel: #16171d;
+  --border: #2a2c36;
+  --text: #e8e8ee;
+  --dim: #9a9cab;
+  --accent: #31c7ef;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }  /* widths include padding and border: easier layout maths */
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.4;
+}
+
+header h1 { margin: 0 0 4px; font-size: 1.4rem; }
+.sub { margin: 0 0 16px; color: var(--dim); max-width: 60em; }
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;        /* on a narrow phone the two lists stack */
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+.picker label {
+  display: flex; flex-direction: column; gap: 4px;
+  color: var(--dim); font-size: 0.9rem;
+  min-width: 0; max-width: 100%;   /* allow shrinking below the list's natural width */
+}
+select, button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.picker select { width: 24em; max-width: 100%; }
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: #1e3a46; border-color: var(--accent); min-width: 6.5em; }
+
+.message {
+  padding: 12px 16px;
+  border: 1px solid #b3261e;
+  background: #2a1214;
+  border-radius: 6px;
+  max-width: 60em;
+}
+
+.boards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  /* 272px normally; on a narrow phone, two panels share the width (minus the
+     16px gap) so compare mode stays side by side. */
+  width: min(272px, calc(50% - 8px));
+}
+/* With a single game, use the full width on a phone. */
+.panel:only-child, #panel-a:has(+ #panel-b[hidden]) { width: min(272px, 100%); }
+.panel[hidden] { display: none; }
+.panel-title { margin: 0 0 8px; font-size: 1rem; font-weight: 600; }
+.panel-title small { display: block; color: var(--dim); font-weight: 400; font-size: 0.8rem; }
+
+/* The canvas draws at 240x528 and is shown at exactly that size (scaling by
+   a few percent makes the 1px gaps between squares uneven). On a screen
+   narrower than that it shrinks, keeping its proportions (the browser's
+   default smooth scaling looks best for shrinking). */
+canvas {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  margin: 0 auto;
+  height: auto;
+  border-radius: 4px;
+}
+
+.stats { width: 100%; margin-top: 8px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.stats td { padding: 2px 0; }
+.stats td:first-child { color: var(--dim); }
+.stats td:last-child { text-align: right; }
+.stats .event td { color: var(--accent); font-weight: 600; }
+
+.controls { margin-top: 16px; max-width: 760px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.speed { color: var(--dim); display: flex; align-items: center; gap: 6px; margin-left: 8px; }
+.timeline { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+#scrubber { flex: 1; min-width: 0; accent-color: var(--accent); }
+#position { color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.help { margin-top: 16px; color: var(--dim); max-width: 60em; }
+.help summary { cursor: pointer; }
+kbd {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.85em;
+}

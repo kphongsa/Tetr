@@ -384,3 +384,23 @@ Plain-language definitions, added as terms come up. Newest at the bottom.
   3,000-piece game is ~1.5 MB, much smaller than the same GIF.
 - **yuv420p**: the colour format every video player supports. It stores colour
   at half resolution, which is why the picture's width and height must be even.
+
+## Step 4c: web viewer
+- **Static site**: a website made only of files (HTML, CSS, JavaScript, JSON)
+  that a server hands out unchanged; no program runs on the server. That's
+  what GitHub Pages hosts for free.
+- **HTML / CSS / JavaScript**: HTML is the page's structure (lists, buttons),
+  CSS how it looks (colours, layout), JavaScript what it does (loading games,
+  drawing, reacting to clicks and keys).
+- **Canvas**: an HTML element that is a blank bitmap JavaScript can paint on
+  (rectangles, text). We draw each board square by square, like the GIFs.
+- **fetch() and file://**: `fetch(url)` downloads a file from JavaScript.
+  Browsers block it for pages opened straight from disk (`file://`), for
+  security, so the viewer must be served over `http://`, e.g. with
+  `python -m http.server`.
+- **requestAnimationFrame**: asks the browser to call a function right before
+  the next screen repaint (~60x per second). Playback advances by
+  "elapsed time x speed" pieces each time, so speed doesn't depend on how fast
+  the computer is.
+- **URL hash**: the part of an address after `#`. The viewer stores the games
+  and piece number there, so a link reopens exactly that moment.
